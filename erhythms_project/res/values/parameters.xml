@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="upload_url">http://erhythms.utm.utoronto.ca/site/api/participantData.php</string>
+    <string name="activate_url">http://erhythms.utm.utoronto.ca/site/api/participantid.php</string>
+    <string name="get_participantconsent_url">http://erhythms.utm.utoronto.ca/site/api/participantConsentForm.php</string>
+    <string name="agree_participantconsent_url">http://erhythms.utm.utoronto.ca/site/api/agreeParticipantConsentForm.php</string>
+    <string name="get_systemconsent_url">http://erhythms.utm.utoronto.ca/site/api/systemConsentForm.php</string>
+    <string name="agree_systemconsent_url">http://erhythms.utm.utoronto.ca/site/api/agreeSystemConsentForm.php</string>
+    <string name="survey_url">http://erhythms.utm.utoronto.ca/site/api/getSurveyQuestion.php</string>
+    <string name="event_url">http://erhythms.utm.utoronto.ca/site/api/event.php</string>
+    <string name="response_url">http://erhythms.utm.utoronto.ca/site/api/surveyQuestion.php</string>
+    <string name="criteria_result_url">http://erhythms.utm.utoronto.ca/site/api/criteriaResult.php</string>
+</resources>

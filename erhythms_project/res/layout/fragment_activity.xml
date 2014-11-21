@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+        android:orientation="vertical"
+    android:weightSum="2">
+
+<LinearLayout
+    	android:id="@+id/question_area"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/question_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/interview_title"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#77C2D7"
+            android:textSize="22sp" />
+        
+        <TextView 
+            android:id="@+id/question_step"
+            style="@style/questionStepTextView"/>
+        
+        <TextView
+            android:id="@+id/question_body"
+            android:text="@string/interview_instruction"
+            style="@style/questionBodyTextView"/>
+        
+        <TextView
+            android:id="@+id/response_text"
+            android:paddingTop="20dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/interview_instruction"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+        
+        
+        
+</LinearLayout>
+
+<ScrollView
+      android:paddingTop="10dp"
+      android:id="@+id/response_area"
+      android:fadeScrollbars="false"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:orientation="vertical"
+      android:layout_weight="1">
+        
+ <LinearLayout
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:paddingLeft="20dp"
+      android:paddingRight="20dp">
+         
+     <View style="@style/Divider"/>
+     
+  <RadioGroup 
+      	android:id="@+id/choice_group"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+      android:layout_marginTop="20dp"
+	    android:orientation="vertical">
+    
+	</RadioGroup>
+	
+	<LinearLayout
+	  android:id="@+id/checkboxsLayout"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="20dp"
+      android:orientation="vertical"
+      >
+      
+	</LinearLayout>
+  
+	
+ <Button
+        android:id="@+id/enterText"
+        android:layout_width="fill_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="20dp"
+        android:text="Enter Text"
+        android:textSize="20sp"
+        />
+    <Button
+        android:id="@+id/choose_addressbook"
+        android:layout_width="fill_parent"
+        android:layout_height="55dp"
+        android:text="Choose from Contacts"
+        android:textSize="20sp"
+        />
+    
+    <Button
+        android:id="@+id/choose_calllog"
+        android:layout_width="fill_parent"
+        android:layout_height="55dp"
+        android:text="Choose from Call Log"
+        android:textSize="20sp"
+        />
+    
+    <Button
+        android:id="@+id/enter_manually"
+        android:layout_width="fill_parent"
+        android:layout_height="55dp"
+        android:text="Enter Manually"
+        android:textSize="20sp"
+        />
+    </LinearLayout>
+    
+</ScrollView>
+    
+</LinearLayout>

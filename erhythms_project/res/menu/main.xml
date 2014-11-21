@@ -1,0 +1,45 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+      <item
+        android:id="@+id/button_back"
+        android:icon="@drawable/ic_action_back"
+        android:title="Previous"
+        android:showAsAction="always"
+        />
+    
+      <item
+        android:icon="@drawable/ic_action_next"
+        android:id="@+id/button_next"
+        android:showAsAction="always"
+        android:title="Next"/>
+      
+     <item 
+        android:id="@+id/action_help"
+        android:title="Help"
+        android:orderInCategory="1"
+        android:showAsAction="never"/>
+    
+      <item
+        android:id="@+id/action_enlarge_fontsize"
+        android:orderInCategory="2"
+        android:showAsAction="never"
+        android:title="Larger Text"/>
+      
+      <item
+        android:id="@+id/action_reduce_fontsize"
+        android:orderInCategory="3"
+        android:showAsAction="never"
+        android:title="Smaller Text"/>
+    
+      <item
+        android:id="@+id/action_about"
+        android:orderInCategory="4"
+        android:showAsAction="never"
+        android:title="About"/>
+       
+      <item
+        android:id="@+id/exit"
+        android:orderInCategory="5"
+        android:showAsAction="never"
+        android:title="Exit"/>
+</menu>

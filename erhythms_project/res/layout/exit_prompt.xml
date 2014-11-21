@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/exitlayout_root"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+ 	
+ 	
+  <Button
+        android:id="@+id/exit_discard"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:text="Exit, Remove All Data"
+        android:textSize="20sp"
+        />
+  
+  <Button
+        android:id="@+id/exit_save"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:text="Exit, But Do Not Remove Data"
+        android:textSize="20sp"
+        />
+ 
+    <Button
+        android:id="@+id/exit_cancel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:textSize="20sp"
+        />
+ 
+</LinearLayout>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">E-Rhythms</string>
+    <string name="app_version">1.4</string>
+    <string name="action_settings">Settings</string>
+    <string name="consent_form">Consent for Participation in Interview Research\n\n\n
+        I volunteer to participate in a research project conducted by Dr. 
+        [Name of the Principle Investigator] from Century University . 
+        I understand that the project is designed to gather information about academic 
+        work of faculty on campus. I will be one of approximately 30 people being interviewed 
+        for this research.\n\n1. My participation in this project is voluntary. 
+        I understand that I will not be paid for my participation. 
+        I may withdraw and discontinue participation at any time without penalty. 
+        If I decline to participate or withdraw from the study, no one on my campus will be told.
+        </string>
+    <string name="button_agree">I Agree</string>
+    <string name="button_disagree">I Disagree</string>
+    <string name="button_back">&lt;</string>
+    <string name="button_next"></string>
+    <string name="disagree_notice">Sorry, you are not eligible for this survey due to disagreement to the consent form. The app will close now.</string>
+    <string name="activate_notice">Please Enter your Participant ID:\n(You may retrieve from the researcher)</string>
+    <string name="build_version">Build 1550</string>
+    <string name="welcome">Welcome to Erhythms!</string>
+    <string name="ok">  OK  </string>
+    <string name="interview_title">Welcome to E-Rhythms!</string>
+	<string name="interview_instruction">INSTRUCTIONS\n\nIn the interview, you\'ll be shown a series of text or questions that has been previously decided by your researcher.\n\nYour responses will be made available to the researcher at the end of the survery.\n\nWe DO NOT gather any personal identifiable data.</string>
+	<string name="help_dialog">INSTRUCTIONS\n\nIn the interview, you\'ll be shown a series of information or questions that has been previously decided by your researcher. Notice that we DO NOT gather any personal identifiable data during the survey or interview. \n\nPress OK/Next button to continue.\n\n
+	    [ALPHATEST_ONLY]This dialog box will soon be replaced with a hovering tutorial texts on the screen, guiding users to use the navigation button and swipe gesture(coming soon) to navigate. Please tell us what do you think. 
+	    </string>
+	<string name="about_dialog">This app was developed through the E-Rthyms Project. E-Rhythms are the Everyday and Eclectic Rhythms of Electronically mediated social interaction. They are the patterns of phone calls, text messages, social media posts, and emails that connect friends, family, and colleagues. They are the fabric of contemporary social life, they help us get by and get ahead, and their complexity necessitates the development of new studies and software.
+	    \n\nAll rights reserved. Copyright © 2014 by all E-Rhythms members listed above for their respective contributions, as permitted by SSHRC, Ryerson University and the University of Toronto. \n\nAbout the project: http://erhythms.utm.utoronto.ca/site/index.php?r=site/page&amp;view=about
+	    </string>
+	<string name="abort_message">Do you want to exit and remove all survey and log data? (This will ensure that any data stored on the server from your phone is completely removed.)</string>
+	<string name="finish_message">Thank you for your interest. You are now opt-out of our research, and all your data has been removed. You may now press OK to exit.</string>
+	<string name="finish_message_withdata">Thank you for your participation. You may now press OK to exit.</string>
+	<string-array name="select_method">
+		<item>Select via Contact</item>
+        <item>Select via Call History</item>
+        <item>Enter Manually</item>
+	</string-array>
+</resources>
