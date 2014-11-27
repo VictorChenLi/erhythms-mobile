@@ -48,6 +48,9 @@ public class EventBean implements Serializable{
 	   //used for accepting text response
 	   private String textResponse = "";
 	   
+	   //used for accepting tie number responsed
+	   private String tieResponse = "";
+	   
 	   //this boolean indicates FREE TEXTBOX RESPONSE
 	   private boolean enterText;
 
@@ -262,5 +265,15 @@ public class EventBean implements Serializable{
 
 	public void setTextResponse(String response_text) {
 		this.textResponse = response_text;
+	}
+
+
+	public String getTieResponse() {
+		return tieResponse;
+	}
+
+
+	public void setTieResponse(String tieResponse) {
+		this.tieResponse = tieResponse;
 	}
 }

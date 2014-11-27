@@ -141,8 +141,6 @@ public class HorizontalScrollInViewGroup extends ViewGroup {
 					boolean canMove = deltaX > 0 ? (max ? allowNext : false)
 							: (min ? true : false);
 					
-					Log.v("debugtag",getCurScreen()+".canMove="+canMove);
-					
 					if (canMove) {
 						scrollBy(deltaX, 0);
 						mLastMotionX = x;

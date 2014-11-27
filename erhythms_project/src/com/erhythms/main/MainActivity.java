@@ -88,7 +88,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	private int totalEventNum = 0;
 	
 	//parameter to identify if downloading and parsing is ok
-	private boolean isReady = false;
+	private boolean readyUpload = false;
 	
 	//Time out for the "choose from address book" button
 	private static final int LOADING_SCREEN_RESULT = 2002;
@@ -179,7 +179,6 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		        	 */
 		        	
 					 // read the string data from the loading activity
-		        	 isReady = data.getBooleanExtra("isReady", false);
 		        	 String eventString = data.getStringExtra("eventString");
 		        	 
 		        	 parseEventString(eventString);
@@ -242,10 +241,6 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		}
 
 	private void uploadResponse(){
-		
-		// change the text of the button to indicate interview is over
-		setButtonDisable(btnNext);
-		viewGroup.setAllowNext(false);
         
         // THE FOLLOWING CODE UPLOAD THE USER RESPONSE
         
@@ -264,28 +259,59 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		JSONArray survey_response = new JSONArray(); // Creating an array of survey response
 		
 		// iterate through the event beans and elicit all survey question id and responses
-		for (int i = 0; i < eventBeanList.size(); i++)
+		for (int i = 0; i < eventFragmentList.size(); i++)
 		{
 			// if the event is survey question, save it to the JSON file
-			if(eventBeanList.get(i).getEventType().equals("SURVEY_QUESTION")){
+			if(eventFragmentList.get(i).getEventbean().getEventType().equals("SURVEY_QUESTION")){
 
-				int qid = eventBeanList.get(i).getQid();
-				String encodedText = Encoder.MD5Encode(eventBeanList.get(i).getTextResponse());
-				String response = eventBeanList.get(i).getChoiceResponse() + " || " + encodedText;
+				int qid = eventFragmentList.get(i).getEventbean().getQid();
 				
-				JSONObject question_answer = new JSONObject();  // Creating individual response_record
+				// check first if there exists choice, text or tie response
+				String text_response = eventFragmentList.get(i).getEventbean().getTextResponse();
+				String choice_response = eventFragmentList.get(i).getEventbean().getChoiceResponse();
+				String tie_response = eventFragmentList.get(i).getEventbean().getTieResponse();
+				
+				if(text_response.length()>1 || choice_response.length()>1 || tie_response.length()>1){
+				
+					JSONObject question_answer = new JSONObject();  // Creating individual response_record
 					
-				// the following add fields to the JSON object
-				try {
-
-					question_answer.put("answer",response);
-					question_answer.put("question_id",qid);
+					String total_response = "";
 					
-				} catch (JSONException e) {
-					e.printStackTrace();
+					//append the choice response
+					if(choice_response.length()>1)total_response = choice_response;
+					
+					//append the text response
+					if(text_response.length()>1)
+						
+						{
+							if(choice_response.length() > 1)total_response = total_response +"||" + text_response;
+							else total_response = text_response;
+						}
+					
+//					//append the tie response
+					
+					if(tie_response.length()>1)
+						
+					{
+						if(choice_response.length() > 1 || text_response.length()>1)
+							total_response = total_response +"||" + tie_response;
+						else total_response = tie_response;
+					}
+							
+					
+					// the following add fields to the JSON object
+					try {
+	
+						question_answer.put("answer",total_response);
+						question_answer.put("question_id",qid);
+						
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					
+					survey_response.put(question_answer);
+					
 				}
-				
-				survey_response.put(question_answer);
 			}
 
 		}
@@ -312,7 +338,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		
 		// THE FOLLOWING CODE UPLOAD ALL THE GENERATED TIE FOR EACH QUESTION
 		
-		//form a JSON file of user response and upload all user response now to the server
+		//form a JSON file upload all generated ties now to the server
         ArrayList<NameValuePair> criteriaResultUpload = new ArrayList<NameValuePair>();
 		
 		Log.v("pid","pid="+pid);
@@ -322,34 +348,41 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		criteriaResultUpload.add(new BasicNameValuePair("participant_id",pid));
 		criteriaResultUpload.add(new BasicNameValuePair("device_id",did));
 		
-		// Putting every question response into a JSON array
+		// Putting ties into a JSON array
 		
-		JSONArray criteria_resultArray = new JSONArray(); // Creating an array of survey response
+		JSONArray criteria_resultArray = new JSONArray(); // Creating an array to store tie generated
 		
-		// iterate through the event beans and elicit all survey question id and responses
-//		for (Map.Entry<Integer, Tie> entry : tiePool.entrySet())
-//		{
-//			
-//			Tie tie = entry.getValue();
-//			String qid = tie.getQid()+"";
-//			String criteria_id = tie.getCriteria().getId()+"";
-//			String hashed_tie = Encoder.hashPhoneNumber(tie.getPhone_number());
-//			
-//			JSONObject criteria_result = new JSONObject();  // Creating individual criteria_result_record
-//			
-//				// the following add fields to the JSON object
-//				try {
-//
-//					criteria_result.put("question_id",qid);
-//					criteria_result.put("criteria_id", criteria_id);
-//					criteria_result.put("tie_hash", hashed_tie);
-//					
-//				} catch (JSONException e) {
-//					e.printStackTrace();
-//				}
-//				
-//				criteria_resultArray.put(criteria_result);
-//			}
+		// iterate through the tie pool to get ties
+		for (int i=0; i < tiePool.size(); i++)
+			
+		{
+			Tie tie = tiePool.get(i);
+			
+			// do a check first to make sure it is not NONAME
+			if(tie.getName()!="NONAME"){
+				
+				//read everything from the tie
+				String qid = tie.getQid()+"";
+				String criteria_id = tie.getCriteria().getId()+"";
+				String hashed_tie = Encoder.hashPhoneNumber(tie.getPhone_number());
+				
+				JSONObject criteria_result = new JSONObject();  // Creating individual criteria_result_record
+				
+					// the following add fields to the JSON object
+					try {
+	
+						criteria_result.put("question_id",qid);
+						criteria_result.put("criteria_id", criteria_id);
+						criteria_result.put("tie_hash", hashed_tie);
+						
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					
+					criteria_resultArray.put(criteria_result);
+				
+			}
+		}
 		
 			//putting the array of JSON object survey responses to the name and value pairs
 			criteriaResultUpload.add(new BasicNameValuePair("criteria_result",criteria_resultArray.toString()));
@@ -673,6 +706,28 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	    			//switch to the next screen
 	    			viewGroup.snapToScreen(viewGroup.getCurScreen()+1);
 	    		
+	    		}else if(readyUpload){
+	    			
+	    			// THE FOLLOWING CODE UPLOADS THE RESPONSES
+	    			uploadResponse();
+	    			
+					// User clicked back then return
+	        	    AlertDialog alertDialog;
+		            alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+		            alertDialog.setTitle("Thank you");
+		            alertDialog.setCancelable(false);
+		            alertDialog.setMessage(getResources().getString(R.string.finish_message_withdata));
+		            alertDialog.setButton("Ok", new DialogInterface.OnClickListener() {
+
+		                  public void onClick(DialogInterface dialog, int id) {
+		                	  
+		                	  //exit the application
+		                	  finish();
+		                	  
+		                } }); 
+		            
+		            alertDialog.show();
+	    			
 	    		}
 	    		
 	    		return true;
@@ -827,30 +882,62 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	                	abort_dialog.dismiss();
 	                }
 		    	});
-		    	
-		    	
-		    	
-		    	
 		    
 	}
+		
+		private void toggleReadyUploadState(boolean isReady){
+			
+			if(isReady){
+				
+				btnNext.setIcon(R.drawable.ic_action_accept);
+				readyUpload = true; //set ready upload state to true
+			 	Toast.makeText(
+	           		MainActivity.this,
+	                   "       === THANK YOU ===\n" +
+	                   "Please press the ¡Ì button to end.",
+	                   Toast.LENGTH_SHORT).show();
+			 	
+			}else{
+				
+				btnNext.setIcon(R.drawable.ic_action_next);
+				readyUpload = false; //set ready upload state to true
+				
+			}
+			
+			
+		}
 
 		
 		// this handles the event triggered in the fragment
 		// which is that: the use has provided response for that event
 		
 		@Override
-		public void onEventResponded(String code) {
-			
-			// TODO Auto-generated method stub
-			Log.v("debugtag",code);
+		public void onEventResponded(boolean allowNext) {
 			
 			// Based on the yes/no from the fragment event
 			// enable or disable the next button
 			
-			String ifEnableNext = code.split(",")[1];
+			if(allowNext){
+				
+				setButtonEnable(btnNext);
+				viewGroup.setAllowNext(true);
+				
+				// CHECK IF RESPONDED TO FINAL SCREEN, IF IT IS THEN TOGGLE READY UPLOAD, OR DON'T DO
+				if(viewGroup.getCurScreen() == eventFragmentList.size()-1){
+					
+					toggleReadyUploadState(true);
+					
+				}
+			}
 			
-			if(ifEnableNext.equals("yes")){setButtonEnable(btnNext);viewGroup.setAllowNext(true);}
-			else if (ifEnableNext.equals("no")){setButtonDisable(btnNext);viewGroup.setAllowNext(false);}
+			else {
+				
+				setButtonDisable(btnNext);
+				viewGroup.setAllowNext(false);
+				toggleReadyUploadState(false);
+			
+			}
+			
 			
 			
 		}
@@ -896,12 +983,12 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 				 */
 				
 				if(currentFrag.getEventbean().getTextResponse().length() > 1 || 
-						currentFrag.getEventbean().getChoiceResponse().length() > 1){
+						currentFrag.getEventbean().getChoiceResponse().length() > 1 ||
+							currentFrag.getEventbean().getTieResponse().length() > 1){
 					
 						setButtonEnable(btnNext);
 						viewGroup.setAllowNext(true);
 						
-						Log.v("debugtag",currentScreen+":enabled Next cause already responded");
 				}
 				/* If no response is expected: no question choices, no enter buttons
 				 * Then the "next" button will allow the user to continue
@@ -913,15 +1000,37 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 						!currentFrag.getEventbean().isEnterText()
 						&& currentFrag.getEventbean().getChoicecount() == 0){
 					
-						Log.v("debugtag",currentScreen+":enabled Next cause no response needed");
-					
 						setButtonEnable(btnNext);
 						viewGroup.setAllowNext(true);
 				}
+		
 			
-			Log.v("debugtag",currentScreen+":choice="+eventFragmentList.get(currentScreen).getEventbean().getChoiceResponse());
-			Log.v("debugtag",currentScreen+":text="+eventFragmentList.get(currentScreen).getEventbean().getChoiceResponse());
+			//DO A CHECK IF IT IS THE FINAL SCREEN, IF IT IS (AND NO RESPONSE REQUIRED), CHANGE NEXT ICON
+			if(currentScreen == eventFragmentList.size()-1){
 				
+				//IF NO RESPONSE REQUIRED
+				if(!currentFrag.getEventbean().isSelectCallLog() && 
+						!currentFrag.getEventbean().isSelectContacts() && 
+						!currentFrag.getEventbean().isEnterManually() && 
+						!currentFrag.getEventbean().isEnterText()
+						&& currentFrag.getEventbean().getChoicecount() == 0){
+				
+						// means ready to upload
+						toggleReadyUploadState(true);
+					
+				//OR IF RESPONSE REQUIRED, BUT ALREADY ANSWERED
+				}else if(currentFrag.getEventbean().getChoiceResponse().length()>1 ||
+						currentFrag.getEventbean().getTextResponse().length()>1 ||
+						currentFrag.getEventbean().getTieResponse().length()>1)
+					{
+					
+						// means ready to upload
+						toggleReadyUploadState(true);
+					
+					}
+				
+			// else IF NOT AT THE FINAL SCREEN, NEVER END AND UPLOAD
+			}else {toggleReadyUploadState(false);}	
 		}
 
 
@@ -933,10 +1042,9 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 			if(tie!=null)
 			{
 				tiePool.add(tie);
-				Log.v("debugtag","registered:"+tie.toString());
 			
 			}
 			
 		}
-	
+		
 }

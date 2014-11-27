@@ -34,6 +34,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -60,7 +61,6 @@ public class EventFragment extends Fragment {
 	private TextView title_tv = null;
 	private TextView textbody_tv = null;
 	private TextView response_tv = null;
-	private TextView step_tv = null;
 	
 	//initializing all UI elements
 	private RadioGroup radioGroup = null;
@@ -114,7 +114,6 @@ public class EventFragment extends Fragment {
 		btnEnterText = (Button)fragmentView.findViewById(R.id.enterText);
 		
 		title_tv = (TextView)fragmentView.findViewById(R.id.question_title);
-		step_tv = (TextView)fragmentView.findViewById(R.id.question_step);
 		textbody_tv = (TextView)fragmentView.findViewById(R.id.question_body);
 		response_tv = (TextView)fragmentView.findViewById(R.id.response_text);
 		
@@ -174,7 +173,7 @@ public class EventFragment extends Fragment {
                         String reponseNum = Encoder.hashPhoneNumber(selected_number);
                         
                         // setting the response for that survey question
-                        eventbean.setTextResponse(reponseNum);
+                        eventbean.setTieResponse(reponseNum);
 	    				
 						// remove the three selection buttons
 //									btnContacts.setVisibility(View.GONE);
@@ -187,7 +186,7 @@ public class EventFragment extends Fragment {
 						response_tv.setTextAppearance(getActivity(), R.style.responseText);
 						
 						// notify the activity to enable going next
-						responseCallBack.onEventResponded(eventbean.getIndex()+",yes");
+						responseCallBack.onEventResponded(true);
 						
                         return;
                     }
@@ -238,7 +237,7 @@ public class EventFragment extends Fragment {
 								input_text = Encoder.hashPhoneNumber(input_text);
 								
 								//setting the response for that survey question
-								eventbean.setTextResponse(input_text);
+								eventbean.setTieResponse(input_text);
 			    				
 								//remove the three selection buttons
 //											btnContacts.setVisibility(View.GONE);
@@ -253,7 +252,7 @@ public class EventFragment extends Fragment {
 								response_tv.setTextAppearance(getActivity(), R.style.responseText);
 								
 								// notify the activity to enable going next
-								responseCallBack.onEventResponded(eventbean.getIndex()+",yes");
+								responseCallBack.onEventResponded(true);
 								
 								
 					    	}else{
@@ -276,7 +275,7 @@ public class EventFragment extends Fragment {
  
 				// create alert dialog
 				AlertDialog alertDialog = alertDialogBuilder.create();
- 
+			
 				// show it
 				alertDialog.show();
 			}
@@ -335,7 +334,7 @@ public class EventFragment extends Fragment {
 								response_tv.setTextAppearance(getActivity(), R.style.responseText);
 								
 								// notify the activity to enable going next
-								responseCallBack.onEventResponded(eventbean.getIndex()+",yes");
+								responseCallBack.onEventResponded(true);
 								
 					    	}else{
 					    		
@@ -413,13 +412,13 @@ public class EventFragment extends Fragment {
 	                 	contact_num = Encoder.hashPhoneNumber(contact_num);
 	                 	
 	                 	//setting the response for that survey question
-	    				eventbean.setTextResponse(contact_num);
+	    				eventbean.setTieResponse(contact_num);
 	                 	
 						response_tv.setText(contact_name);
 						response_tv.setVisibility(View.VISIBLE);
 						
 						// notify the activity to enable going next
-						responseCallBack.onEventResponded(eventbean.getIndex()+",yes");
+						responseCallBack.onEventResponded(true);
 						
 						
 	                 	} 
@@ -457,7 +456,9 @@ public class EventFragment extends Fragment {
 
 	    // Container Activity must implement this interface
 	    public interface OnEventRespondedListener {
-	        public void onEventResponded(String code);
+	    	
+	    	// boolean value to decide if let go next
+	        public void onEventResponded(boolean allowNext);
 	    }
 	    
 	    
@@ -513,8 +514,7 @@ public class EventFragment extends Fragment {
 		radioGroup.removeAllViews();
 		checkboxLayout.removeAllViews();
 		
-		step_tv.setVisibility(View.VISIBLE);
-		step_tv.setText("Step "+eventbean.getIndex());
+		
 		// based on the event type, dynamically change the user interface
 		if (eventType.equals("TEXT_DISPLAY")){
 			
@@ -524,7 +524,7 @@ public class EventFragment extends Fragment {
 			//update user interface
 			title_tv.setVisibility(View.GONE);
 			textbody_tv.setText(textbody);
-//			textbody_tv.setTextAppearance(getActivity(), R.style.normalText);
+			textbody_tv.setTextAppearance(getActivity(), R.style.normalText);
 			radioGroup.setVisibility(View.GONE);
 			
 		}
@@ -582,7 +582,7 @@ public class EventFragment extends Fragment {
 			//update user interface
 //			title_tv.setText(eventIndex+".Tie Display");
 			title_tv.setVisibility(View.GONE);
-//			textbody_tv.setTextAppearance(getActivity(), R.style.tieText);
+			textbody_tv.setTextAppearance(getActivity(), R.style.tieText);
 			radioGroup.setVisibility(View.GONE);
 		}
 		
@@ -849,7 +849,7 @@ public class EventFragment extends Fragment {
 			// setting the question body
 			textbody_tv.setText(qbody);
 			
-//			textbody_tv.setTextAppearance(getActivity(), R.style.normalText);
+			textbody_tv.setTextAppearance(getActivity(), R.style.normalText);
 			
 			// identify the question type
 			
@@ -892,7 +892,6 @@ public class EventFragment extends Fragment {
 				        
 				        choiceRadioButton.setLayoutParams(params);
 						choiceRadioButton.setTextSize(21);
-						choiceRadioButton.setButtonDrawable(R.drawable.erhythms_btn_radio_holo_dark);
 						
 						radioGroup.addView(choiceRadioButton,i);
 						
@@ -918,16 +917,14 @@ public class EventFragment extends Fragment {
 		    				// if there exists radio button checked, then enable the next button
 			    			if (checkedId != -1){
 			    				
-			    				responseCallBack.onEventResponded(eventbean.getIndex()+",yes");
+			    				responseCallBack.onEventResponded(true);
 								
-			    			}else {responseCallBack.onEventResponded(eventbean.getIndex()+",no");}
+			    			}else {responseCallBack.onEventResponded(false);}
 			    			
 			    			//record response
 			    			checkSingleChoice();
 						
 					}
-					
-					
 		        }
 		        ); 
 				
@@ -1016,13 +1013,13 @@ public class EventFragment extends Fragment {
 			            			
 			            			// if there exists checked box, then continue and enable "next" button
 			            			if(choiceBox.isChecked()){
-			            				responseCallBack.onEventResponded(eventbean.getIndex()+",yes");
+			            				responseCallBack.onEventResponded(true);
 			            				break;
 			            			}
 			            			
 			            			// if no checked box is found, then disable the button
 			            			// THIS IS BECAUSE, we don't want to continue without at least a box checked
-			            			responseCallBack.onEventResponded(eventbean.getIndex()+",no");
+			            			responseCallBack.onEventResponded(false);
 			            	}
 			            	
 			            	//record the response
@@ -1072,14 +1069,6 @@ public class EventFragment extends Fragment {
  			
  			if(selectedButton!=null){
  				
- 				// add interaction style
- 				for(int i = 0; i <radioGroup.getChildCount();i++)	
- 				{
- 	 				RadioButton rb = (RadioButton) radioGroup.getChildAt(i);
- 	 				rb.setTextAppearance(getActivity(), R.style.onUncheckedText);
- 				}
- 	 			selectedButton.setTextAppearance(getActivity(), R.style.onCheckedText);
- 	 			
  				String choice = selectedButton.getTag().toString();
  				String choiceText = selectedButton.getText().toString();
  				
@@ -1110,8 +1099,6 @@ public class EventFragment extends Fragment {
  					
  					// if that check box is checked, its answer will be stored
  					if (choiceCheckbox.isChecked()){
- 						// add interaction style
- 						choiceCheckbox.setTextAppearance(getActivity(), R.style.onCheckedText);
  						
  						String choiceNum = choiceCheckbox.getTag().toString();
  						String choiceText = choiceCheckbox.getText().toString();
@@ -1120,10 +1107,6 @@ public class EventFragment extends Fragment {
  						if (i == checkboxLayout.getChildCount()-1)answer = answer + choiceNum +"." + choiceText;
  						else{ answer = answer + choiceNum +"."+ choiceText + ","; }
  						
- 					}
- 					else
- 					{
- 						choiceCheckbox.setTextAppearance(getActivity(), R.style.onUncheckedText);
  					}
  				}
  				

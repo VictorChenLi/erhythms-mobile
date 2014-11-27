@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-        android:orientation="vertical"
-    android:weightSum="2">
+    android:layout_height="fill_parent">
 
 <LinearLayout
     	android:id="@+id/question_area"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        >
 
         <TextView
             android:id="@+id/question_title"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="@string/interview_title"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="22sp"
             android:textColor="#77C2D7"
-            android:textSize="22sp" />
-        
-        <TextView 
-            android:id="@+id/question_step"
-            style="@style/questionStepTextView"/>
-        
+            android:text="@string/interview_title"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
         <TextView
             android:id="@+id/question_body"
+            android:paddingTop="5dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/interview_instruction"
-            style="@style/questionBodyTextView"/>
+            android:textAppearance="?android:attr/textAppearanceLarge" />
         
         <TextView
             android:id="@+id/response_text"
@@ -42,34 +42,31 @@
             android:text="@string/interview_instruction"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         
-        
-        
 </LinearLayout>
 
 <ScrollView
-      android:paddingTop="10dp"
+      android:layout_below="@id/question_area"
+      android:paddingTop="20dp"
       android:id="@+id/response_area"
       android:fadeScrollbars="false"
-      android:layout_width="fill_parent"
-      android:layout_height="fill_parent"
-      android:orientation="vertical"
-      android:layout_weight="1">
+      android:layout_width="match_parent"
+      android:layout_height="match_parent">
         
  <LinearLayout
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:orientation="vertical"
       android:paddingLeft="20dp"
-      android:paddingRight="20dp">
+      android:paddingTop="20dp"
+      android:paddingRight="20dp"
+      >
          
-     <View style="@style/Divider"/>
-     
   <RadioGroup 
       	android:id="@+id/choice_group"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-      android:layout_marginTop="20dp"
-	    android:orientation="vertical">
+	    android:orientation="vertical"
+	    >
     
 	</RadioGroup>
 	
@@ -77,7 +74,6 @@
 	  android:id="@+id/checkboxsLayout"
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
-      android:layout_marginTop="20dp"
       android:orientation="vertical"
       >
       
@@ -119,4 +115,4 @@
     
 </ScrollView>
     
-</LinearLayout>
+</RelativeLayout>

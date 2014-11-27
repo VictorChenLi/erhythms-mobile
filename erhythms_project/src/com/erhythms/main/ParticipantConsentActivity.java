@@ -2,6 +2,7 @@ package com.erhythms.main;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.http.HttpResponse;
@@ -16,7 +17,11 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import com.erhythms.eventbeans.Tie;
+import com.erhythms.eventbeans.TieCriteria;
+import com.erhythms.eventbeans.TieGenerator;
 import com.erhythms.network.GetLogData;
 import com.erhythms.network.UploadDataTask;
 import com.erhythmsproject.erhythmsapp.R;
@@ -49,9 +54,15 @@ public class ParticipantConsentActivity extends Activity {
 	private String pid = null;
 	private String did = null;
 	
+	// Determine if participant passed the prerequisite
+	private boolean eligiable;
+	
 	//the text view of consent form is global
 	TextView formtext = null;
-		
+	
+	// return code to decide whether to allow continue
+	String retCode = "";
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -71,6 +82,9 @@ public class ParticipantConsentActivity extends Activity {
 		appinfo = getSharedPreferences("appinfo", Context.MODE_PRIVATE);
 		pid = appinfo.getString("pid", "--");
 		did = appinfo.getString("did", "--");
+		
+		//SETTING ELIGIBILITY TO TRUE BY DEFAULT
+		eligiable = true;
 		
 		//checking first if network is available
 		if(isNetworkConnected(getApplicationContext())){
@@ -103,10 +117,11 @@ public class ParticipantConsentActivity extends Activity {
 		    	
 		@Override
 		protected String doInBackground(Void... para) {
-				String retCode = "";
-				String consentForm = null;
+
+				String formContent = null;
+			
 				try {
-					
+
 					//list is a list of parameters to upload
 					List<NameValuePair> params = new ArrayList<NameValuePair>();
 					
@@ -126,12 +141,12 @@ public class ParticipantConsentActivity extends Activity {
 
 					// Set the timeout in milliseconds until a connection is established.
 					// The default value is zero, that means the timeout is not used. 
-					int timeoutConnection = 3000;
+					int timeoutConnection = 8000;
 					HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
 
 					// Set the default socket timeout (SO_TIMEOUT) 
 					// in milliseconds which is the timeout for waiting for data.
-					int timeoutSocket = 5000;
+					int timeoutSocket = 10000;
 					HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
 							
 					DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
@@ -142,25 +157,72 @@ public class ParticipantConsentActivity extends Activity {
 					// Get Response stored in a Json file 
 					String retSrc = EntityUtils.toString(response.getEntity()); 
 					
-					retCode = retSrc.substring(retSrc.indexOf("{")+1,retSrc.indexOf("}"))
-							.split(",")[0].split(":")[1]; 
+					String resultString = retSrc.substring(retSrc.indexOf("{"),retSrc.length());
+					
+					// convert the string to a JSON object
+					JSONObject resultJson = new JSONObject(resultString);
+
+					Log.v("result","ParticipantFormString="+resultString);
 					
 					//the following parsed and retrieve the contents from the consent form
-					consentForm = retSrc.substring(retSrc.indexOf("{")+1,retSrc.indexOf("}"))
-							.split("\"ParticipantConsentForm\":")[1];
+					formContent = resultJson.getString("ParticipantConsentForm");
 					
-					consentForm = consentForm.substring(1,consentForm.length()-1);
+					retCode = resultJson.getString("ReturnStatus");
 					
-					Log.v("result","returncode="+retSrc);
-					Log.v("ttt","cf="+consentForm);
-							
+					JSONObject filterJson = resultJson.getJSONObject("ParticipantFilter");
+					
+					int min_first_text = Integer.parseInt(filterJson.getString("min_first_text"));
+					int min_first_call = Integer.parseInt(filterJson.getString("min_first_call"));
+					
+					/* THE FOLLOWING CODE CHECK TO SEE IF THE PARTICIPANT IS ELIGIBALE, 
+					 * BASED ON THE PRE-REQUISITE REQUIREMENTS
+					 * 
+					 * This is achieved by simply setting a tie criteria that checks if
+					 * any tie exists before the required minimum days
+					 */
+					
+					TieCriteria checkTextTC = new TieCriteria(0, "the most", 99999, min_first_text, "text");
+					TieCriteria checkCallTC = new TieCriteria(0, "the most", 99999, min_first_call, "call");
+					
+					// initiate a tie generator
+					TieGenerator tieGT = new TieGenerator(ParticipantConsentActivity.this);
+					
+					Tie text_tie = null;
+					Tie call_tie = null;
+					
+					Log.v("debugtag","checking with Criteria:"+checkTextTC.toString());
+					Log.v("debugtag","checking with Criteria:"+checkCallTC.toString());
+					
+					try {
+						text_tie = tieGT.getTieByCriteria(checkTextTC);
+						
+						} catch (Exception e) {
+						
+							text_tie = new Tie(0,"NONAME", "NONAME", checkTextTC);
+
+					}
+					
+					try {
+						call_tie = tieGT.getTieByCriteria(checkCallTC);
+						
+						} catch (Exception e) {
+						
+							call_tie = new Tie(0,"NONAME", "NONAME", checkCallTC);
+
+					}
+					
+					// determine eligibility based on the tie generated
+					if(text_tie.getName().equals("NONAME")||call_tie.getName().equals("NONAME"))eligiable = false;
+					
+					Log.v("debugtag","For text, get:"+text_tie.getName()+", for call, get:"+call_tie.getName()+", eligibility="+eligiable);
+					
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 						Log.v("exception",e.toString());
 					}
 				
-					return consentForm;
+					return formContent;
 				}
 
 				protected void onPostExecute(String result) {
@@ -182,6 +244,70 @@ public class ParticipantConsentActivity extends Activity {
 			}
 			else if (v.getId()==R.id.bagree){
 				
+				
+				if(retCode.equals("1231")){
+					
+					// User clicked back then return
+	        	    AlertDialog alertDialog;
+		            alertDialog = new AlertDialog.Builder(ParticipantConsentActivity.this).create();
+		            alertDialog.setTitle("Fatal Error");
+		            alertDialog.setCancelable(false);
+		            alertDialog.setMessage(getResources().getString(R.string.fatal_error_message));
+		            alertDialog.setButton("Ok", new DialogInterface.OnClickListener() {
+
+		                  public void onClick(DialogInterface dialog, int id) {
+		                	  
+		                	  //exit the application
+		                	  finish();
+		                	  
+		                } }); 
+		            
+		            alertDialog.show();
+		            
+					
+				}else if(!eligiable){
+					
+					
+					//retrieving URL of agree to consent form
+					String url_consent = getApplicationContext().getResources().getString(R.string.agree_participantconsent_url);
+					
+					//setting the parameters to upload
+					ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+					
+					Log.v("pid","pid="+pid);
+					Log.v("did","did="+did);
+					
+					// Using a list of nameValuePairs to store POST data
+					params.add(new BasicNameValuePair("participant_id",pid));
+					params.add(new BasicNameValuePair("device_id",did));
+					params.add(new BasicNameValuePair("AgreeToParticipantConsentForm","Y"));
+					params.add(new BasicNameValuePair("PassedFilter","N"));
+					
+					UploadDataTask sendConsent = new UploadDataTask(url_consent, params, getApplicationContext());
+					
+					sendConsent.execute();
+					
+					// User clicked back then return
+	        	    AlertDialog alertDialog;
+		            alertDialog = new AlertDialog.Builder(ParticipantConsentActivity.this).create();
+		            alertDialog.setTitle("Warning");
+		            alertDialog.setCancelable(false);
+		            alertDialog.setMessage(getResources().getString(R.string.not_eligible_message));
+		            alertDialog.setButton("Ok", new DialogInterface.OnClickListener() {
+
+		                  public void onClick(DialogInterface dialog, int id) {
+		                	  
+		                	  //exit the application
+		                	  finish();
+		                	  
+		                } });
+		            
+		            alertDialog.show();
+		            
+				}
+				else{
+				
+				
 				//retrieving URL of agree to consent form
 				String url_consent = getApplicationContext().getResources().getString(R.string.agree_participantconsent_url);
 				
@@ -195,6 +321,7 @@ public class ParticipantConsentActivity extends Activity {
 				params.add(new BasicNameValuePair("participant_id",pid));
 				params.add(new BasicNameValuePair("device_id",did));
 				params.add(new BasicNameValuePair("AgreeToParticipantConsentForm","Y"));
+				params.add(new BasicNameValuePair("PassedFilter","Y"));
 				
 				UploadDataTask sendConsent = new UploadDataTask(url_consent, params, getApplicationContext());
 				
@@ -216,6 +343,8 @@ public class ParticipantConsentActivity extends Activity {
 				startActivity(intent);
 				
 				ParticipantConsentActivity.this.finish();
+				
+				}
 			}
 		}
 		
@@ -307,8 +436,8 @@ public class ParticipantConsentActivity extends Activity {
 	protected void exitNotice() {
 		AlertDialog.Builder builder = new Builder(this);
 		builder.setMessage(R.string.disagree_notice);
-		builder.setTitle("Notice");
-		builder.setPositiveButton("Confirm",
+		builder.setTitle("Warning");
+		builder.setPositiveButton("OK",
 		new android.content.DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {

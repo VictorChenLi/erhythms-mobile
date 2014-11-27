@@ -22,65 +22,10 @@
         <item name="android:textSize">32sp</item>
     </style>
     
-    <style name="stepText">
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">18sp</item>
-        <item name ="android:typeface">sans</item>
-        <item name="android:textColor">#FFFFFF</item>
-    </style>
-    
-    <style name="questionText">
-        <item name ="android:textSize">18sp</item>
-        <item name ="android:typeface">sans</item>
-        <item name="android:textColor">#FFFFFF</item>
-    </style>
-    
     <style name="normalText">
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">23sp</item>
     </style>
-    
-     <style name="questionStepTextView">
-         <item name ="android:paddingRight">60dp</item>
-         <item name ="android:layout_marginLeft">10dp</item>
-         <item name ="android:layout_marginTop">20dp</item>
-        <item name ="android:layout_width">wrap_content</item>
-        <item name ="android:layout_height">wrap_content</item>
-        <item name ="android:background">@drawable/steptitle</item>
-        <item name ="android:textAppearance">@style/stepText</item>
-     </style>
-    
-    <style name="questionBodyTextView">
-        <item name ="android:paddingTop">5dp</item>
-        <item name ="android:paddingRight">15dp</item>
-        <item name ="android:paddingLeft">15dp</item>
-        <item name ="android:layout_marginTop">5dp</item>
-        <item name ="android:layout_marginLeft">10dp</item>
-        <item name ="android:layout_marginRight">10dp</item>
-        <item name ="android:layout_marginBottom">10dp</item>
-        <item name ="android:layout_width">match_parent</item>
-        <item name ="android:layout_height">match_parent</item>
-        <item name ="android:background">@drawable/question_body_background</item>
-        <item name ="android:textAppearance">@style/questionText</item>
-    </style>
-    
-    <style name="onCheckedText">
-        <item name = "android:textColor">#1BBC9C</item>
-        <item name = "android:textStyle">bold</item>
-        <item name="android:textSize">23sp</item>
-    </style>
-    
-	<style name="onUncheckedText">
-        <item name = "android:textColor">#FFFFFF</item>
-    </style>
-    
-	<style name="Divider">
-	    <item name="android:layout_width">match_parent</item>
-	    <item name="android:layout_height">1dp</item>
-	    <item name="android:layout_marginTop">3dp</item>
-	    <item name="android:layout_marginBottom">3dp</item>
-	    <item name="android:background">?android:attr/listDivider</item>
-	</style>
     
     <style name="responseText">
         <item name="android:textSize">20sp</item>

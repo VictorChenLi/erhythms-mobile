@@ -48,9 +48,6 @@ public class LoadingScreen extends Activity {
 	private String pid = null;
 	private String did = null;
 	
-	//parameter to identify if downloading and parsing is ok
-	private boolean isReady = false;
-	
 	private Button reconnect_button;
 	private ProgressBar loadingBar;
 	private TextView loadingText;
