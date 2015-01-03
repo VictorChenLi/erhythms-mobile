@@ -42,6 +42,17 @@
             android:text="@string/interview_instruction"
             android:textAppearance="?android:attr/textAppearanceLarge" />
         
+         <TextView
+            android:id="@+id/hint_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="20dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="15sp"
+            android:textStyle="italic" />
+        
 </LinearLayout>
 
 <ScrollView

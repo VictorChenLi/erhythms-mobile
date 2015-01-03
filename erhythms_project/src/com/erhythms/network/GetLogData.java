@@ -13,9 +13,6 @@ import org.json.JSONObject;
 import com.erhythms.logdata.CallPhoneBean;
 import com.erhythms.logdata.SMSMessageBean;
 import com.erhythms.network.Encoder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import android.net.Uri;
 import android.provider.CallLog;
@@ -36,6 +33,9 @@ public class GetLogData{
 	
 	//used to retrieve SMS
 	public static final String SMS_URI_ALL = "content://sms/";
+	public static final String CALL_URI_ALL = "content://call_log/calls";
+	
+	
 	private Uri uri = null; //used for getting SMS data
 	private Uri calluri = null; 
 	
@@ -48,7 +48,7 @@ public class GetLogData{
 	public GetLogData(Context appcontext){
 		this.appcontext = appcontext;
 		uri = Uri.parse(SMS_URI_ALL);
-		calluri = Uri.parse("content://call_log/calls");
+		calluri = Uri.parse(CALL_URI_ALL);
 	}
 	
 	// Getting all the log data for upload

@@ -12,6 +12,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 import com.erhythms.network.LogDBHelper;
 import com.erhythmsproject.erhythmsapp.R;
@@ -20,7 +21,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -36,7 +36,6 @@ public class LoadingScreen extends Activity {
 
 	//database used to query logs
 	private LogDBHelper dbhelper;
-	private SQLiteDatabase database;
 	
 	//stores the event string
 	private String eventString = null;
@@ -100,7 +99,7 @@ public class LoadingScreen extends Activity {
 	}
 
 	/*
-	 * Async Task to make http call
+	 * AsyncTask to make http call
 	 */
 	private class PrefetchData extends AsyncTask<String, String, String> {
 
@@ -138,10 +137,10 @@ public class LoadingScreen extends Activity {
 			
 				try {
 				
+				// create the database and insert all call and text logs to it
 				dbhelper = LogDBHelper.getInstance(getApplicationContext());
-				database = dbhelper.getReadableDatabase();
-				database.close();
-
+				dbhelper.updateAllLogs();
+				
 				loadingBar.setProgress(4);
 				
 				/*
@@ -192,9 +191,13 @@ public class LoadingScreen extends Activity {
 				eventString = EntityUtils.toString(response.getEntity()); 
 				
 				// parsing to get the returned data
-				eventString = eventString.substring(eventString.indexOf("{")+1,eventString.indexOf("}"));
+				eventString = eventString.substring(eventString.indexOf("{"),eventString.length());
 				
 				Log.v("result",eventString);
+				
+				//GETTING THE RETURN CODE
+				JSONObject retObj = new JSONObject(eventString);
+				String retCode = retObj.getString("ReturnStatus");
 				
 				loadingBar.setProgress(8);
 				
@@ -202,7 +205,8 @@ public class LoadingScreen extends Activity {
 				
 				loadingBar.setProgress(10);
 				
-				return "ok";
+				if(!retCode.equals("64891")){return "no";}
+				else{return "ok";}
 				
 			}catch (Exception e){
 				

@@ -267,7 +267,6 @@ public class ParticipantConsentActivity extends Activity {
 					
 				}else if(!eligiable){
 					
-					
 					//retrieving URL of agree to consent form
 					String url_consent = getApplicationContext().getResources().getString(R.string.agree_participantconsent_url);
 					
@@ -367,7 +366,6 @@ public class ParticipantConsentActivity extends Activity {
 					GetLogData gtlog = new GetLogData(ParticipantConsentActivity.this);
 					JSONArray logdata = gtlog.generateAllLogData();
 
-					Log.v("logdata","reachedhere");
 					Log.v("logdata","call&text_log="+logdata.toString());
 					
 					String call_log = null;

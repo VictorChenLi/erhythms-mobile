@@ -61,6 +61,7 @@ public class EventFragment extends Fragment {
 	private TextView title_tv = null;
 	private TextView textbody_tv = null;
 	private TextView response_tv = null;
+	private TextView hint_tv = null;
 	
 	//initializing all UI elements
 	private RadioGroup radioGroup = null;
@@ -116,6 +117,7 @@ public class EventFragment extends Fragment {
 		title_tv = (TextView)fragmentView.findViewById(R.id.question_title);
 		textbody_tv = (TextView)fragmentView.findViewById(R.id.question_body);
 		response_tv = (TextView)fragmentView.findViewById(R.id.response_text);
+		hint_tv = (TextView)fragmentView.findViewById(R.id.hint_text);
 		
 		radioGroup.setVisibility(View.GONE);
 		btnContacts.setVisibility(View.GONE);
@@ -186,7 +188,7 @@ public class EventFragment extends Fragment {
 						response_tv.setTextAppearance(getActivity(), R.style.responseText);
 						
 						// notify the activity to enable going next
-						responseCallBack.onEventResponded(true);
+						responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
 						
                         return;
                     }
@@ -238,12 +240,7 @@ public class EventFragment extends Fragment {
 								
 								//setting the response for that survey question
 								eventbean.setTieResponse(input_text);
-			    				
-								//remove the three selection buttons
-//											btnContacts.setVisibility(View.GONE);
-//											btnCallLog.setVisibility(View.GONE);
-//											btnEnterManually.setVisibility(View.GONE);
-								
+					
 								response_tv.setVisibility(View.VISIBLE);
 								
 								// show user input as question answer
@@ -252,7 +249,7 @@ public class EventFragment extends Fragment {
 								response_tv.setTextAppearance(getActivity(), R.style.responseText);
 								
 								// notify the activity to enable going next
-								responseCallBack.onEventResponded(true);
+								responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
 								
 								
 					    	}else{
@@ -319,13 +316,6 @@ public class EventFragment extends Fragment {
 								// setting the response for that survey question
 								eventbean.setTextResponse(input_text);
 			    				
-								// remove the three selection buttons
-//											btnContacts.setVisibility(View.GONE);
-//											btnCallLog.setVisibility(View.GONE);
-//											btnEnterManually.setVisibility(View.GONE);
-//											btnEnterText.setVisibility(View.GONE);
-//											radioGroup.setVisibility(View.GONE);
-								
 								response_tv.setVisibility(View.VISIBLE);
 								
 								// show user input as question answer
@@ -334,8 +324,8 @@ public class EventFragment extends Fragment {
 								response_tv.setTextAppearance(getActivity(), R.style.responseText);
 								
 								// notify the activity to enable going next
-								responseCallBack.onEventResponded(true);
-								
+								responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
+																
 					    	}else{
 					    		
 					    		Toast.makeText(
@@ -418,7 +408,7 @@ public class EventFragment extends Fragment {
 						response_tv.setVisibility(View.VISIBLE);
 						
 						// notify the activity to enable going next
-						responseCallBack.onEventResponded(true);
+						responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
 						
 						
 	                 	} 
@@ -449,7 +439,7 @@ public class EventFragment extends Fragment {
 		
 		}
 		
-		
+		// update the UI of the fragment with provided parameters
 		updateUI();
 		
 	}
@@ -458,7 +448,12 @@ public class EventFragment extends Fragment {
 	    public interface OnEventRespondedListener {
 	    	
 	    	// boolean value to decide if let go next
-	        public void onEventResponded(boolean allowNext);
+	        public void onEventResponded(int eventID, int qid, String qtype, String responseString);
+	        
+	        // CODE: CONTAINS A STRING OF FOUR VALUES
+	        // Event ID(int), QID(int), QUESTION_TYPE("S"(single) or "M"(multiple)),
+	        // CHOICE_INDEX(int for Single, String for multiple)
+	        
 	    }
 	    
 	    
@@ -495,6 +490,11 @@ public class EventFragment extends Fragment {
 		
 		// set invisible text views not used and enable based on request
 		response_tv.setVisibility(View.GONE);
+		btnContacts.setVisibility(View.GONE);
+		btnCallLog.setVisibility(View.GONE);
+		btnEnterNumManually.setVisibility(View.GONE);
+		btnEnterText.setVisibility(View.GONE);
+		hint_tv.setVisibility(View.GONE);
 		
 		// IF THERE ARE ALREADY INPUT TEXT REPONSE, THEN SHOW
 		if (eventbean.getTextResponse().length() > 1){
@@ -504,16 +504,9 @@ public class EventFragment extends Fragment {
 			
 			}
 		
-		// make all UI elements invisible first, then enable them based on settings
-		btnContacts.setVisibility(View.GONE);
-		btnCallLog.setVisibility(View.GONE);
-		btnEnterNumManually.setVisibility(View.GONE);
-		btnEnterText.setVisibility(View.GONE);
-		
 		// Clean up all the items in the radio group and check box layout
 		radioGroup.removeAllViews();
 		checkboxLayout.removeAllViews();
-		
 		
 		// based on the event type, dynamically change the user interface
 		if (eventType.equals("TEXT_DISPLAY")){
@@ -557,10 +550,12 @@ public class EventFragment extends Fragment {
 					tie = tieGT.getTieByCriteria(tieCriteria);
 				
 				}catch(Exception e){
+					
 					Toast.makeText(
                             getActivity(),"No name in your address book fits the criteria.",
                                     Toast.LENGTH_SHORT).show();
 					
+					tie = new Tie(eventbean.getQid(),"NONAME", "NONAME", tieCriteria);
 					
 				}
 			
@@ -574,7 +569,6 @@ public class EventFragment extends Fragment {
 				
 				//show in text view
 				textbody_tv.setText(eventbean.getDynamicText());
-				
 				
 			}
 			
@@ -603,6 +597,15 @@ public class EventFragment extends Fragment {
 //			title_tv.setText(qtitle);
 			title_tv.setVisibility(View.GONE);
 			
+			// BRANCH ENABLED ONLY
+			// if enabled branch, the hint will show that response can't be changed
+			if (eventbean.isBranchEnabled()){
+				
+				hint_tv.setVisibility(View.VISIBLE);
+				hint_tv.setText(R.string.branchenabled_hint);
+				
+			}
+			
 			/* THE FOLLOWING APPLIES TO: DYNAMIC QUESTIONS
 			 * If the survey question requires dynamic text, will based on it
 			 * to modify the text body
@@ -613,27 +616,6 @@ public class EventFragment extends Fragment {
 			
 			// if it is NOT empty, then there's dynamic text to show
 			if(!criteriaList.isEmpty()){
-				
-				//==== TESTING CODE BEGIN ====
-//				//opens the database for access
-//				database = dbhelper.getReadableDatabase();
-//				
-//				Cursor cursor = database.rawQuery("SELECT * FROM call_log;", null);
-//			    
-//			        // looping through all rows and adding to list
-//			        if (cursor.moveToFirst()) {
-//			              do {
-//			                  String name = cursor.getString(0);
-//			                  int occurrence = cursor.getInt(1);
-//			                  int num_of_days = cursor.getInt(2);
-//			                  String phone_number = cursor.getString(3);
-//			               
-//			                  Log.v("debugtag",name+", "+occurrence+", "+num_of_days+","+phone_number);
-//			                 
-//			              } while (cursor.moveToNext());
-//			              
-//			    } 
-				//==== TESTING CODE END ====
 				
 				// rearrange the array list in order of text position
 				// this is necessary for later inserting the text into question body
@@ -658,7 +640,6 @@ public class EventFragment extends Fragment {
 				ArrayList<String> event_local_namepool = new ArrayList<String>();
 
 				TieGenerator tieGT = new TieGenerator(getActivity());
-				
 				
 				
 				//IF THERE ARE NO EXISTING GENERATED TIES(NEW EVENT)
@@ -775,11 +756,15 @@ public class EventFragment extends Fragment {
 							
 							// NO NEED TO REGISTER, BECAUSE USED PREVIOUS TIE
 							
+							// error control: if not found previous tie, then assign NONAME
+							if(tie == null)tie = new Tie(eventbean.getQid(),"NONAME", "NONAME", tieCriteria);
+							
 							
 						} catch (Exception e) {
 							
 							//this should not happen, if it does there's a big warning
 							Log.v("debugtag","Warning: Can't find previous tie.");
+							
 							tie = new Tie("NONAME", "NONAME", tieCriteria);
 							
 						}
@@ -914,15 +899,23 @@ public class EventFragment extends Fragment {
 		            	 * if not, it will disable the "next" button
 		            	 */
 		            	
-		    				// if there exists radio button checked, then enable the next button
-			    			if (checkedId != -1){
-			    				
-			    				responseCallBack.onEventResponded(true);
-								
-			    			}else {responseCallBack.onEventResponded(false);}
-			    			
-			    			//record response
-			    			checkSingleChoice();
+						// if there exists radio button checked, then enable the next button
+						if (checkedId != -1){
+		    				
+		    				RadioButton checkedButton = (RadioButton) group.findViewById(checkedId);
+		    				int checkedIndex = group.indexOfChild(checkedButton) + 1;
+		    				
+		    				responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"S",checkedIndex+"");
+							
+		    			}else {responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"S","-1");}
+		    			
+						// FOR BRANCH ENABLED EVENTS ONLY
+						// if branching is enabled, the response will NOT be allowed to change 
+						
+						if(eventbean.isBranchEnabled())disableResponse();
+						
+			    		//record response
+			    		checkSingleChoice();
 						
 					}
 		        }
@@ -1007,19 +1000,42 @@ public class EventFragment extends Fragment {
 			            	 * if not, it will disable the "next" button
 			            	 */
 			            	
+			            	String checkedBoxIndexString = "";
+			            	
 			            	for (int i =0; i < checkboxLayout.getChildCount();i++){
 			            			
 			            			CheckBox choiceBox = (CheckBox) checkboxLayout.getChildAt(i);
 			            			
 			            			// if there exists checked box, then continue and enable "next" button
 			            			if(choiceBox.isChecked()){
-			            				responseCallBack.onEventResponded(true);
-			            				break;
+			              				
+			            				// set the choice index string format
+			            				checkedBoxIndexString = checkedBoxIndexString + (i + 1) + "&";
+			            				
 			            			}
-			            			
-			            			// if no checked box is found, then disable the button
-			            			// THIS IS BECAUSE, we don't want to continue without at least a box checked
-			            			responseCallBack.onEventResponded(false);
+			            	}
+			            	
+			            	// if there exists checked box, then continue and enable "next" button
+			            	if(!checkedBoxIndexString.equals("")){
+			            		
+			            		// remove the & sign at end if exists
+				            		if(checkedBoxIndexString.endsWith("&")){
+				            			
+				            			// remove the & at the end
+				            			checkedBoxIndexString = checkedBoxIndexString.substring(0, checkedBoxIndexString.length()-1);
+				            			
+				            		}
+				            		
+			            		responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"M",checkedBoxIndexString);
+			            		
+			            		}
+			            	
+			            	else {
+			            	
+		            			// if no checked box is found, then disable the button
+		            			// THIS IS BECAUSE, we don't want to continue without at least a box checked
+			            		responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"M","-1");
+	            			
 			            	}
 			            	
 			            	//record the response
@@ -1126,7 +1142,21 @@ public class EventFragment extends Fragment {
 		this.eventbean = eventbean;
 	}
 	
-	
-	
+	public void disableResponse(){
+		
+		for (int i = 0; i < radioGroup.getChildCount(); i++) {
+			radioGroup.getChildAt(i).setEnabled(false);
+		}
+		
+		for (int i = 0; i < checkboxLayout.getChildCount(); i++) {
+			checkboxLayout.getChildAt(i).setEnabled(false);
+		}
+		
+		btnCallLog.setEnabled(false);
+		btnContacts.setEnabled(false);
+		btnEnterNumManually.setEnabled(false);
+		btnEnterText.setEnabled(false);
+		
+	}
 	
 }

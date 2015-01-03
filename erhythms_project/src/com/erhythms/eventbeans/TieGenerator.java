@@ -23,7 +23,7 @@ public class TieGenerator{
 	* prev_days: integer, within number of days
 	*/
 	
-	private SQLiteOpenHelper dbhelper;
+	private LogDBHelper dbhelper;
 	private SQLiteDatabase database;
 	
 	
@@ -146,6 +146,9 @@ public class TieGenerator{
 	          
 	    } 
 	    
+	    // close the database and cursor
+	    cursor.close();
+	    
 	    //returning the desired name
 	    return nameCount;
 	}
@@ -267,7 +270,9 @@ public class TieGenerator{
         
         Log.v("namelist","================================================");
         Log.v("namelist","Criteria_id="+tc.getId()+": "+criteria+" "+type+"ed within "+durationFrom+" to "+durationTo+" day(s)");
+        Log.v("namelist","RawQuery:"+selectQuery);
         Log.v("namelist","================================================");
+        
         
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
@@ -290,6 +295,9 @@ public class TieGenerator{
               } while (cursor.moveToNext());
               
         } 
+        
+        // close the cursor
+        cursor.close();
         
         // if criteria is median will return the median name
         if (criteria.equals("median")){

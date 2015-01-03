@@ -36,4 +36,5 @@
 	<string name="finish_message_withdata">Thank you for your participation. \nYou may now press OK to exit.</string>
 	<string name="fatal_error_message">Sorry, we\'ve encountered fatal error. \nPlease contact the administrator for help.</string>
 	<string name="not_eligible_message">Sorry, you are not eligible to participate in this research. \nYou may now press \&quot;OK\&quot; to exit. Thank you for your interest.</string>
+	<string name="branchenabled_hint">Hint: response of this question leads to other branched questions, for this reason, you may not be allowed to change the response once provided.</string>
 </resources>

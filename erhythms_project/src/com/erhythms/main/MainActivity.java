@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -19,7 +19,6 @@ import com.erhythms.eventbeans.TieCriteria;
 import com.erhythms.network.Encoder;
 import com.erhythms.network.UploadDataTask;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -28,13 +27,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.provider.ContactsContract.Data;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.ViewPager;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -69,11 +63,17 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	private String pid = null;
 	private String did = null;
 
-	// ArrayList for storing ArrayList
+	// Hash map with Integer being event id and map to event bean
 	private HashMap <Integer,EventBean> eventBeanList;
 
 	//Array List used to handle the fragments
 	private ArrayList<EventFragment> eventFragmentList;
+	
+	// Array List used to store the question skip JSON Objects
+	private ArrayList<JSONObject> questionSkipList;
+	
+	// a hashset storing all the branch enabled qids
+	private HashSet<Integer> branchEnabledQid;
 	
 	// total number of survey questions
 	private int totalTextNum = 0;
@@ -170,7 +170,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		    
 			super.onActivityResult(requestCode, resultCode, data);
-	
+			
 			if (requestCode == LOADING_SCREEN_RESULT) {
 		        // Make sure the request was successful
 		        if (resultCode == RESULT_OK && data!=null) {
@@ -206,7 +206,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		 	    		eventFragmentList.add(eventFragment);
 		 	    		
 		 	    		FragmentTransaction ft = getFragmentManager().beginTransaction();
-		 	    		ft.add(R.id.event_frame, eventFragmentList.get(i-1),i+"");
+		 	    		ft.add(R.id.event_frame, eventFragmentList.get(i-1),String.valueOf(i));
 		 	    		ft.commit();
 		 	    		
 		 	         }
@@ -406,226 +406,276 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	}
 	
 	// this method parses all the events from the event string
-	private void parseEventString(String eventString){
-		
-		//initiate the list
-		eventBeanList = new HashMap<Integer,EventBean>();
-		
-		//Retrieve the three sub strings first
-		String textString = eventString.substring(eventString.indexOf("\"TEXT_DISPLAY\""),
-				eventString.indexOf("\"TIE_DISPLAY\"")-1).replace("\"TEXT_DISPLAY\",","");
-		
-		String tieString = eventString.substring(eventString.indexOf("\"TIE_DISPLAY\""),
-				eventString.indexOf("\"SURVEY_QUESTION\"")-1).replace("\"TIE_DISPLAY\",","");
-		
-		String questionString = eventString.substring(eventString.indexOf("\"SURVEY_QUESTION\""),
-				eventString.indexOf("]")).replace("\"SURVEY_QUESTION\",","");
-		
-		Log.v("estring","TEXT="+textString);
-		Log.v("estring","TIE="+tieString);
-		Log.v("estring","QS="+questionString); 
-		
-		// THE FOLLOWING PARSES THE TEXT DISPLAY STRING
-		String[] txtArray = textString.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-		totalTextNum = Integer.parseInt(txtArray[0].replace("\"", ""));
-		
-		//  only parsing when there exists Text Display Event
-		if (totalTextNum != 0){
+		private void parseEventString(String eventString){
 			
-			int cursor = 1; //set cursor to 1 because 0 has been read (totalNumber)
+			//initiate the list
+			eventBeanList = new HashMap<Integer,EventBean>();
 			
-			while (cursor < txtArray.length){
-				int eventIndex = 0;
-				String textbody = "";
-				
-				eventIndex = Integer.parseInt(txtArray[cursor].replace("\"", "")); //reading event index
-				cursor++; // move to the next
-				
-				textbody = txtArray[cursor]; //reading text body
-				cursor++; // move to the next
-				
-				// for every event read, a new bean is created
-				EventBean ebean = new EventBean(eventIndex,textbody);
-				
-				eventBeanList.put(eventIndex,ebean);
-			}
-		}
-		
-		
-		// THE FOLLOWING PARSES THE TIE DISPLAY STRING
-		String[] tieArray = tieString.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-		totalTieNum = Integer.parseInt(tieArray[0].replace("\"", ""));
-		
-		//only parsing when there exists Tie Display Event
-		if (totalTieNum != 0){
+			//initiate the questionskip list;
+			questionSkipList = new ArrayList<JSONObject>();
 			
-			int cursor = 1; //set cursor to 1 because 0 has been read (totalNumber)
+			//initiate the branchenabledqid set
+			branchEnabledQid = new HashSet<Integer>();
 			
-			while (cursor < tieArray.length){
-				int eventIndex = 0;
-				int criteria_id = 0;
-				String frequency = "";
-				int from = 0;
-				int duration = 0;
-				String action = "";
+			String eventDataString = "";
+			String questionSkipString = "";
+			
+			//IMPROVE THIS TO PARSE JSON OBJECTS
+			try {
 				
-				eventIndex = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading event index
-				cursor++; // move to the next
+				JSONObject eventJSONObj = new JSONObject(eventString);
 				
-				criteria_id = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading criteria id
-				cursor++; // move to the next
+				// retrieve the event data string
+				eventDataString = eventJSONObj.getString("event_data");
 				
-				frequency = tieArray[cursor].replace("\"", "").toLowerCase(); //reading frequency
-				cursor++; // move to the next
+				// retrieve the question skipping data string
+				questionSkipString = eventJSONObj.getString("question_skip");
 				
-				from = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading from days integer
-				cursor++; // move to the next
+				JSONArray qskipJSONArray = new JSONArray(questionSkipString);
 				
-				duration = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading duration days integer
-				cursor++; // move to the next
+				// iterate through the question skipp JSON Array List and add to list
+				for (int i = 0; i < qskipJSONArray.length(); i++) {
 					
-				action = tieArray[cursor].replace("\"", "").replace("]", "").toLowerCase(); //reading frequency
-				cursor++; // move to the next
+					JSONObject qskipJSONObj = qskipJSONArray.getJSONObject(i);
+					
+					questionSkipList.add(qskipJSONObj);
+					
+					//register this qid in the list that indicates all branch enabled questions
+					branchEnabledQid.add(qskipJSONObj.getInt("question_id"));
+					
+					Log.v("debugtag",qskipJSONObj.toString());
+				}
 				
-				// for every event read, a new bean is created
-				EventBean ebean = new EventBean(eventIndex);
 				
-				// for every criteria read, initiate a new criteria to add to the event bean
-				TieCriteria tieCriteria = new TieCriteria(criteria_id, frequency, from, duration, action);
-
-				ebean.addTieCriteria(tieCriteria);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 				
-				eventBeanList.put(eventIndex,ebean);
+			} 
+			
+			
+			//Retrieve the three sub strings first
+			String textString = eventDataString.substring(eventDataString.indexOf("\"TEXT_DISPLAY\""),
+					eventDataString.indexOf("\"TIE_DISPLAY\"")-1).replace("\"TEXT_DISPLAY\",","");
+			
+			String tieString = eventDataString.substring(eventDataString.indexOf("\"TIE_DISPLAY\""),
+					eventDataString.indexOf("\"SURVEY_QUESTION\"")-1).replace("\"TIE_DISPLAY\",","");
+			
+			String questionString = eventDataString.substring(eventDataString.indexOf("\"SURVEY_QUESTION\""),
+					eventDataString.indexOf("]")).replace("\"SURVEY_QUESTION\",","");
+			
+			Log.v("estring","TEXT="+textString);
+			Log.v("estring","TIE="+tieString);
+			Log.v("estring","QS="+questionString); 
+			
+			// THE FOLLOWING PARSES THE TEXT DISPLAY STRING
+			String[] txtArray = textString.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+			totalTextNum = Integer.parseInt(txtArray[0].replace("\"", ""));
+			
+			//  only parsing when there exists Text Display Event
+			if (totalTextNum != 0){
+				
+				int cursor = 1; //set cursor to 1 because 0 has been read (totalNumber)
+				
+				while (cursor < txtArray.length){
+					int eventIndex = 0;
+					String textbody = "";
+					
+					eventIndex = Integer.parseInt(txtArray[cursor].replace("\"", "")); //reading event index
+					cursor++; // move to the next
+					
+					textbody = txtArray[cursor]; //reading text body
+					cursor++; // move to the next
+					
+					// for every event read, a new bean is created
+					EventBean ebean = new EventBean(eventIndex,textbody);
+					
+					eventBeanList.put(eventIndex,ebean);
+				}
 			}
-		}
-		
-		
-		// THE FOLLOWING PARSES THE SURVEY QUESTION STRING
-		String[] qArray = questionString.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-		totalQuestionNum = Integer.parseInt(qArray[0].replace("\"", ""));
-		
-		
-		//  Only parsing when there exists survey question event
-		if (totalQuestionNum != 0){
 			
-			int cursor = 1; // initially set cursor to 1 because question strings start from the second place
-		
-			// the loop is used to parse the entire string
-			while(cursor < qArray.length){
+			
+			// THE FOLLOWING PARSES THE TIE DISPLAY STRING
+			String[] tieArray = tieString.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+			totalTieNum = Integer.parseInt(tieArray[0].replace("\"", ""));
+			
+			//only parsing when there exists Tie Display Event
+			if (totalTieNum != 0){
 				
-				int eventIndex = 0;
-				int qid = 0;
-				String qbody = "";
-				String qanswer = "";
-				String qType = "single";
-				int dynamic_count = 0;
+				int cursor = 1; //set cursor to 1 because 0 has been read (totalNumber)
 				
-				boolean selectContacts = false;
-				boolean selectCallLog = false;
-				boolean enterManually = false;
-				boolean enterText = false;
-				
-				int numofans = 0; //number of answers
-				
-				// parsing the event index id
-				eventIndex = Integer.parseInt(qArray[cursor].replace("\"", "")); //reading question body
-				cursor++; // move to the next
-				
-				// parsing the question id
-				qid = Integer.parseInt(qArray[cursor].replace("\"", "")); //reading question id
-				cursor++;
-				
-				// parsing the question type
-				qType = qArray[cursor].replace("\"", "").toLowerCase();
-				cursor++;
-				
-				// parsing the question body
-				qbody = qArray[cursor]; //reading question body
-				cursor++; // move to the next
-				
-				if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))selectContacts = true; //reading whether select contacts
-				cursor++; // move to the next
-				
-				if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))selectCallLog = true; //reading whether select call log
-				cursor++; // move to the next
-				
-				if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))enterManually = true; //reading whether enter manually
-				cursor++; // move to the next
-				
-				if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))enterText = true; //reading whether enter textbox is enabled
-				cursor++; // move to the next
-				
-				numofans = Integer.parseInt(qArray[cursor].replace("\"", "").replace("]", ""));
-				cursor++;
-
-					//inner loop to read the answers
-					for (int i=0;i < numofans; i++){
+				while (cursor < tieArray.length){
+					int eventIndex = 0;
+					int criteria_id = 0;
+					String frequency = "";
+					int from = 0;
+					int duration = 0;
+					String action = "";
+					
+					eventIndex = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading event index
+					cursor++; // move to the next
+					
+					criteria_id = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading criteria id
+					cursor++; // move to the next
+					
+					frequency = tieArray[cursor].replace("\"", "").toLowerCase(); //reading frequency
+					cursor++; // move to the next
+					
+					from = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading from days integer
+					cursor++; // move to the next
+					
+					duration = Integer.parseInt(tieArray[cursor].replace("\"", "")); //reading duration days integer
+					cursor++; // move to the next
 						
-						// concatenate answers together
-						// if not reading the last answer
-						if (i != numofans - 1){
-							qanswer = qanswer + qArray[cursor] + "_";
-						}// if reading the last answer
-						else{
-							qanswer = qanswer + qArray[cursor];
+					action = tieArray[cursor].replace("\"", "").replace("]", "").toLowerCase(); //reading frequency
+					cursor++; // move to the next
+					
+					// for every event read, a new bean is created
+					EventBean ebean = new EventBean(eventIndex);
+					
+					// for every criteria read, initiate a new criteria to add to the event bean
+					TieCriteria tieCriteria = new TieCriteria(criteria_id, frequency, from, duration, action);
+
+					ebean.addTieCriteria(tieCriteria);
+					
+					eventBeanList.put(eventIndex,ebean);
+				}
+			}
+			
+			
+			// THE FOLLOWING PARSES THE SURVEY QUESTION STRING
+			String[] qArray = questionString.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+			totalQuestionNum = Integer.parseInt(qArray[0].replace("\"", ""));
+			
+			
+			//  Only parsing when there exists survey question event
+			if (totalQuestionNum != 0){
+				
+				int cursor = 1; // initially set cursor to 1 because question strings start from the second place
+			
+				// the loop is used to parse the entire string
+				while(cursor < qArray.length){
+					
+					int eventIndex = 0;
+					int qid = 0;
+					String qbody = "";
+					String qanswer = "";
+					String qType = "single";
+					int dynamic_count = 0;
+					
+					boolean selectContacts = false;
+					boolean selectCallLog = false;
+					boolean enterManually = false;
+					boolean enterText = false;
+					
+					int numofans = 0; //number of answers
+					
+					// parsing the event index id
+					eventIndex = Integer.parseInt(qArray[cursor].replace("\"", "")); //reading question body
+					cursor++; // move to the next
+					
+					// parsing the question id
+					qid = Integer.parseInt(qArray[cursor].replace("\"", "")); //reading question id
+					cursor++;
+					
+					// parsing the question type
+					qType = qArray[cursor].replace("\"", "").toLowerCase();
+					cursor++;
+					
+					// parsing the question body
+					qbody = qArray[cursor]; //reading question body
+					cursor++; // move to the next
+					
+					if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))selectContacts = true; //reading whether select contacts
+					cursor++; // move to the next
+					
+					if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))selectCallLog = true; //reading whether select call log
+					cursor++; // move to the next
+					
+					if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))enterManually = true; //reading whether enter manually
+					cursor++; // move to the next
+					
+					if(qArray[cursor].replace("\"", "").toLowerCase().equals("yes"))enterText = true; //reading whether enter textbox is enabled
+					cursor++; // move to the next
+					
+					numofans = Integer.parseInt(qArray[cursor].replace("\"", "").replace("]", ""));
+					cursor++;
+
+						//inner loop to read the answers
+						for (int i=0;i < numofans; i++){
+							
+							// concatenate answers together
+							// if not reading the last answer
+							if (i != numofans - 1){
+								qanswer = qanswer + qArray[cursor] + "_";
+							}// if reading the last answer
+							else{
+								qanswer = qanswer + qArray[cursor];
+							}
+							cursor++; // move to next
 						}
-						cursor++; // move to next
-					}
-				
-				dynamic_count = Integer.parseInt(qArray[cursor].replace("\"", "").replace("]", ""));
-				cursor ++; // moved to the next
+					
+					dynamic_count = Integer.parseInt(qArray[cursor].replace("\"", "").replace("]", ""));
+					cursor ++; // moved to the next
 
+					
+					//initiate a new event bean to save events
 				
-				//initiate a new event bean to save events
-			
-				// for every survey question read, a new bean is created
-				EventBean ebean = new EventBean(eventIndex,qid,qbody,qType,qanswer,numofans,selectContacts,selectCallLog,enterManually,enterText);
-				
-				// inner loop to read the dynamic text parameters
-				// the multiplied number is the number of fields for a single dynamic text
-				// for every criteria (dynamic text) the loop goes once
-				for(int i=0;i < dynamic_count; i++){
+					// for every survey question read, a new bean is created
+					EventBean ebean = new EventBean(eventIndex,qid,qbody,qType,qanswer,numofans,selectContacts,selectCallLog,enterManually,enterText);
+					
+					// inner loop to read the dynamic text parameters
+					// the multiplied number is the number of fields for a single dynamic text
+					// for every criteria (dynamic text) the loop goes once
+					for(int i=0;i < dynamic_count; i++){
 
-						//reading the dynamic position
-						int position = Integer.parseInt(qArray[cursor].replace("\"", ""));
-						cursor ++; // moved to the next
+							//reading the dynamic position
+							int position = Integer.parseInt(qArray[cursor].replace("\"", ""));
+							cursor ++; // moved to the next
+							
+							//reading the criteria id
+							int criteriaID = Integer.parseInt(qArray[cursor].replace("\"", ""));
+							cursor ++; // moved to the next
+							
+							//reading the frequency
+							String frequency = qArray[cursor].replace("\"", "").toLowerCase();
+							cursor ++; // moved to the next
+							
+							//reading the duration from
+							int durationFrom = Integer.parseInt(qArray[cursor].replace("\"", ""));
+							cursor ++; // moved to the next
+							
+							//reading the duration to
+							int durationTo = Integer.parseInt(qArray[cursor].replace("\"", ""));
+							cursor ++; // moved to the next
+							
+							//reading the type
+							String type = qArray[cursor].replace("\"", "").toLowerCase();
+							cursor ++; // moved to the next
+							
+							//reading the selection method
+							String method = qArray[cursor].replace("\"", "").replace("]", "").toLowerCase();
+							cursor ++; // moved to the next
+							
+							TieCriteria newTc = new TieCriteria(criteriaID, position, frequency, durationFrom, durationTo, type, method);
+							
+							ebean.addTieCriteria(newTc);
+						}
+					
+					//SETTING Branch Enabled/Disabled for the event
+					if(branchEnabledQid.contains(qid)){
 						
-						//reading the criteria id
-						int criteriaID = Integer.parseInt(qArray[cursor].replace("\"", ""));
-						cursor ++; // moved to the next
+						ebean.setBranchEnabled(true);
 						
-						//reading the frequency
-						String frequency = qArray[cursor].replace("\"", "").toLowerCase();
-						cursor ++; // moved to the next
-						
-						//reading the duration from
-						int durationFrom = Integer.parseInt(qArray[cursor].replace("\"", ""));
-						cursor ++; // moved to the next
-						
-						//reading the duration to
-						int durationTo = Integer.parseInt(qArray[cursor].replace("\"", ""));
-						cursor ++; // moved to the next
-						
-						//reading the type
-						String type = qArray[cursor].replace("\"", "").toLowerCase();
-						cursor ++; // moved to the next
-						
-						//reading the selection method
-						String method = qArray[cursor].replace("\"", "").replace("]", "").toLowerCase();
-						cursor ++; // moved to the next
-						
-						TieCriteria newTc = new TieCriteria(criteriaID, position, frequency, durationFrom, durationTo, type, method);
-						
-						ebean.addTieCriteria(newTc);
+					}else {ebean.setBranchEnabled(false);}
+					
+					// adding the bean to the array list
+					eventBeanList.put(eventIndex,ebean);
+					
 					}
-				
-				// adding the bean to the array list
-				eventBeanList.put(eventIndex,ebean);
 				
 				}
-			
-			}
-	}
+		}
 	
 	//this method sets the ImageButton to ENABLE state
 	private void setButtonEnable(MenuItem button){
@@ -696,12 +746,14 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	    		}
 	    		
 	    		return true;
-	    		
+    		
 	    	// code for the next button here	
 	    	case R.id.button_next:
 				
 	    		//Error control to avoid going out of bound
-	    		if(viewGroup.getCurScreen() < eventFragmentList.size()-1){
+	    		if(viewGroup.getCurScreen() < viewGroup.getChildCount()-1){
+	    			
+	    			Log.v("debugtag`", "VGCurrent="+viewGroup.getCurScreen()+"/"+"VGChildCount="+viewGroup.getChildCount());
 	    			
 	    			//switch to the next screen
 	    			viewGroup.snapToScreen(viewGroup.getCurScreen()+1);
@@ -912,33 +964,92 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		// which is that: the use has provided response for that event
 		
 		@Override
-		public void onEventResponded(boolean allowNext) {
+		public void onEventResponded(int event_id, int question_id, String qtype, String responseString) {
 			
-			// Based on the yes/no from the fragment event
-			// enable or disable the next button
+			// TODO Auto-generated method stub
 			
-			if(allowNext){
-				
-				setButtonEnable(btnNext);
-				viewGroup.setAllowNext(true);
-				
-				// CHECK IF RESPONDED TO FINAL SCREEN, IF IT IS THEN TOGGLE READY UPLOAD, OR DON'T DO
-				if(viewGroup.getCurScreen() == eventFragmentList.size()-1){
+			//check if there's response string then enable going next
+			if(!responseString.equals("-1")){setButtonEnable(btnNext);viewGroup.setAllowNext(true);}
+			else {setButtonDisable(btnNext);viewGroup.setAllowNext(false);}
+			
+			// HERE THE APP CHECKS THE "QUESTION SKIPPING" BASED ON USER CHOICE
+			// THE MECHANISM IS: FOR every question responded, check the question skip list for matches
+			// first get the selected question id and question choice index
+			 
+			// CODE: CONTAINS A STRING OF FOUR VALUES
+	        // QID(int), QUESTION_TYPE("S"(single) or "M"(multiple)),
+	        // CHOICE_INDEX(int for Single, String for multiple)
+			
+			
+			//Prerequisite: this question has enabled branching
+			if (branchEnabledQid.contains(question_id)){
+			
+				// DEPENDING ON IF THE EVENT IS SINGLE/MULTIPLE CHOICE
+				// Compare the question index to determine whether to skip
+				if (qtype.equals("S")){
 					
-					toggleReadyUploadState(true);
+					int qid = 0;
+					int option_index = 0;
+					int qid_toskip = 0;
 					
-				}
+					// Find the corresponding JSONObject in the list
+					for (JSONObject qskipObj:questionSkipList){
+						
+						try {
+							
+							qid = qskipObj.getInt("question_id");
+							
+							option_index = qskipObj.getInt("option_index");
+							
+							qid_toskip =  qskipObj.getInt("question_id_to_skip");
+							
+						} catch (JSONException e) {
+		
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							continue;
+						}
+						
+						// check if question id and choice index matches
+						if(question_id == qid && option_index == Integer.parseInt(responseString)){
+								
+								for (int j = 0; j < eventFragmentList.size(); j++){
+									
+									int event_qid = eventFragmentList.get(j).getEventbean().getQid();
+									 
+									if (qid_toskip == event_qid){
+										
+										// if finds match, check the fr agments to hide(skip) the intended question
+										// This will remove it from the VIEWGROUP but NOT from the eventFragmentList
+										
+										FragmentTransaction removeFragmentTran = getFragmentManager().beginTransaction();
+										removeFragmentTran.remove(getFragmentManager().findFragmentByTag(String.valueOf(j+1))); //j+1 because tag started with 1
+										
+										//remove fragment from the view group and the list
+										eventFragmentList.remove(j);
+							
+										removeFragmentTran.commit();
+										
+										Log.v("debugtag","SkippedEvent#="+j+", currentEvent#="+event_id);
+												
+										//if already found the one to remove, no need to continue search
+										//ONLY BECAUSE this is a single choice questions
+										break;
+										
+										}
+									
+									}
+								
+						}
+					}
+						
+					}else if (qtype.equals("M")){
+						
+						// IF THIS IS A MULTIPLE CHOICE, THEN RETRIEVE THE SELECTED BOXES
+						// AND SKIP THE CORRESPONDING QUESTIONS
+						
+					};
 			}
-			
-			else {
-				
-				setButtonDisable(btnNext);
-				viewGroup.setAllowNext(false);
-				toggleReadyUploadState(false);
-			
-			}
-			
-			
 			
 		}
 
@@ -958,7 +1069,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 				//disable at the start
 				setButtonDisable(btnBack);
 				
-			}else if(currentScreen==eventFragmentList.size()-1){
+			}else if(currentScreen == viewGroup.getChildCount()-1){
 				
 				//disable next at the end
 				setButtonDisable(btnNext);
@@ -1006,7 +1117,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		
 			
 			//DO A CHECK IF IT IS THE FINAL SCREEN, IF IT IS (AND NO RESPONSE REQUIRED), CHANGE NEXT ICON
-			if(currentScreen == eventFragmentList.size()-1){
+			if(currentScreen == viewGroup.getChildCount()-1){
 				
 				//IF NO RESPONSE REQUIRED
 				if(!currentFrag.getEventbean().isSelectCallLog() && 
@@ -1042,7 +1153,8 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 			if(tie!=null)
 			{
 				tiePool.add(tie);
-			
+//				Log.v("debugtag","registered:"+tie.toString());
+				
 			}
 			
 		}

@@ -64,6 +64,8 @@ public class EventBean implements Serializable{
 	   
 	   private String dynamicText = "";
 	   
+	   private boolean isBranchEnabled = false;
+	   
 	   //initiating Text Display
 	   public EventBean(int index, String textbody)
 	   {
@@ -275,5 +277,15 @@ public class EventBean implements Serializable{
 
 	public void setTieResponse(String tieResponse) {
 		this.tieResponse = tieResponse;
+	}
+
+
+	public boolean isBranchEnabled() {
+		return isBranchEnabled;
+	}
+
+
+	public void setBranchEnabled(boolean isBranchEnabled) {
+		this.isBranchEnabled = isBranchEnabled;
 	}
 }
