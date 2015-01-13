@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_root"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/splash_screen"
+    >
+ 	
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:padding="30dp"
+        android:paddingBottom="50dp"
+        android:orientation="vertical"
+        >
+        
+     <Button
+         android:id="@+id/reconnect_button"
+         style="@style/AppTheme"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_gravity="center"
+         android:paddingBottom="10dp"
+         android:text="          Retry          "
+         android:textSize="25sp" />
+    
+    <ProgressBar
+        android:id="@+id/loadingProgress"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="20dp"
+        android:minHeight="25dp"
+        android:max="10"
+        />
+    
+    <TextView
+        android:id="@+id/loadingtext"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:text="Loading data..."/>
+    </LinearLayout>
+
+</RelativeLayout>

@@ -90,7 +90,6 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	//parameter to identify if downloading and parsing is ok
 	private boolean readyUpload = false;
 	
-	//Time out for the "choose from address book" button
 	private static final int LOADING_SCREEN_RESULT = 2002;
 	
 	/* TIE POOL is used in this application for multiple purposes

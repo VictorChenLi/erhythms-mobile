@@ -178,9 +178,9 @@ public class EventFragment extends Fragment {
                         eventbean.setTieResponse(reponseNum);
 	    				
 						// remove the three selection buttons
-//									btnContacts.setVisibility(View.GONE);
-//									btnCallLog.setVisibility(View.GONE);
-//									btnEnterManually.setVisibility(View.GONE);
+//						btnContacts.setVisibility(View.GONE);
+//						btnCallLog.setVisibility(View.GONE);
+//						btnEnterManually.setVisibility(View.GONE);
 
 						// show user input as question answer
 						response_tv.setVisibility(View.VISIBLE);
@@ -551,11 +551,8 @@ public class EventFragment extends Fragment {
 				
 				}catch(Exception e){
 					
-					Toast.makeText(
-                            getActivity(),"No name in your address book fits the criteria.",
-                                    Toast.LENGTH_SHORT).show();
-					
 					tie = new Tie(eventbean.getQid(),"NONAME", "NONAME", tieCriteria);
+					Log.v("failedcriteria",tieCriteria.toString());
 					
 				}
 			
@@ -683,6 +680,7 @@ public class EventFragment extends Fragment {
 							} catch (Exception e) {
 							
 							tie = new Tie(eventbean.getQid(),"NONAME", "NONAME", tieCriteria);
+							Log.v("failedcriteria",tieCriteria.toString());
 
 						}
 						
@@ -717,10 +715,10 @@ public class EventFragment extends Fragment {
 						} catch (Exception e) {
 							
 							tie = new Tie(eventbean.getQid(),"NONAME", "NONAME", tieCriteria);
-
+							Log.v("failedcriteria",tieCriteria.toString());
 							
 						}
-						
+							
 							// register the name in the name pool
 							tieGenerateCallBack.onTieGenerated(tie);
 							
@@ -766,7 +764,7 @@ public class EventFragment extends Fragment {
 							Log.v("debugtag","Warning: Can't find previous tie.");
 							
 							tie = new Tie("NONAME", "NONAME", tieCriteria);
-							
+							Log.v("failedcriteria",tieCriteria.toString());
 						}
 						
 						

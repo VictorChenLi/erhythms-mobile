@@ -58,6 +58,7 @@ public class Encoder {
 				    // phone must begin with '+'
 				    PhoneNumber numberProto = phoneUtil.parse(contact_number, "");
 				    countryCode = numberProto.getCountryCode()+"";
+				    
 				} catch (NumberParseException e) {
 				    System.err.println("NumberParseException was thrown: " + e.toString());
 				}

@@ -131,7 +131,17 @@ public class TieGenerator{
 					Cursor avgCursor = database.rawQuery(countAvgQuery, null);
 					avgCursor.moveToFirst();
 					
-				}
+					
+				
+				// 6. Percentile 
+				}else if(criteria.contains("percentile")){
+					
+					selectQuery = "SELECT name, COUNT(name), days, phone_number " +
+	    					 "FROM "+select_database+" WHERE name IS NOT null AND name IS NOT 'null' " +
+	    					 "AND days <= " + durationFrom +" AND days >= " + durationTo + " " +
+	    					 "GROUP BY name ORDER BY COUNT(name) ASC";
+					
+				}	
 		
 	    Cursor cursor = database.rawQuery(selectQuery, null);
 	    
@@ -174,6 +184,10 @@ public class TieGenerator{
 		
 		// used in "mean" criteria to calculate mean
 		float averageCount = 0;
+		
+		
+		
+		//FIRST STEP IS TO DETERMINE THE QUERY BASED ON THE CRITERIA
 		
 		// checking the type to decide which database to query
 		if(type.equals("call"))select_database = "call_log";
@@ -262,7 +276,18 @@ public class TieGenerator{
 					avgCursor.moveToFirst();
 					
 					averageCount = avgCursor.getFloat(0);
-				}
+		
+				
+					
+				// 6. Percentile
+				}else if(criteria.contains("percentile")){
+					
+					selectQuery = "SELECT name, COUNT(name), days, phone_number " +
+	    					 "FROM "+select_database+" WHERE name IS NOT null AND name IS NOT 'null' " +
+	    					 "AND days <= " + durationFrom +" AND days >= " + durationTo + " " +
+	    					 "GROUP BY name ORDER BY COUNT(name) ASC";
+				}	
+		
 		
 //		Log.v("debugtag", "query="+selectQuery);
 		
@@ -299,6 +324,10 @@ public class TieGenerator{
         // close the cursor
         cursor.close();
         
+        
+        
+        // SECOND STEP IS TO SELECT THE DESIRED TIE FROM THE QUERIED TIE LIST
+        
         // if criteria is median will return the median name
         if (criteria.equals("median")){
         	
@@ -327,7 +356,7 @@ public class TieGenerator{
         	int i = tie_list.size();
         	
         	Random rand = new Random();
-			place = rand.nextInt(i)+1;
+			place = rand.nextInt(i) + 1;
         	
         	return tie_list.get(place-1);
         	
@@ -379,7 +408,24 @@ public class TieGenerator{
     		
     		else{ return output_tie; }
         }	
-        else{
+        
+        
+        // if criteria is percentile, select the tie based on the Nearest Rank Method
+        // details to be found: http://en.wikipedia.org/wiki/Percentile#Definition_of_the_Nearest_Rank_method
+        
+        else if(criteria.contains("percentile")){
+        	
+        	int percentile = Integer.parseInt(criteria.split(" ")[0]);
+        	
+        	//Using the Nearest Rank Method to get the tie
+        	int upperLimit = (int)Math.ceil(( percentile / 100.00 ) * tie_list.size());
+        	
+        	place = new Random().nextInt(upperLimit)+1;;
+        	
+        	return tie_list.get(place-1);
+        	
+        }
+        	else{
         	
 	        //returning the desired name if it uses any criteria other than median
 	        return tie_list.get(place-1);
