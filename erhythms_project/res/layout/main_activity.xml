@@ -7,7 +7,9 @@
     android:id="@+id/event_frame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_above="@+id/eventProgress">
+    android:layout_above="@+id/eventProgress"
+    android:animateLayoutChanges="true"
+    >
 
 </com.erhythms.main.HorizontalScrollInViewGroup>
     

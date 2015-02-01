@@ -19,17 +19,17 @@
         android:orderInCategory="1"
         android:showAsAction="never"/>
     
-      <item
-        android:id="@+id/action_enlarge_fontsize"
-        android:orderInCategory="2"
-        android:showAsAction="never"
-        android:title="Larger Text"/>
+<!--       <item -->
+<!--         android:id="@+id/action_enlarge_fontsize" -->
+<!--         android:orderInCategory="2" -->
+<!--         android:showAsAction="never" -->
+<!--         android:title="Larger Text"/> -->
       
-      <item
-        android:id="@+id/action_reduce_fontsize"
-        android:orderInCategory="3"
-        android:showAsAction="never"
-        android:title="Smaller Text"/>
+<!--       <item -->
+<!--         android:id="@+id/action_reduce_fontsize" -->
+<!--         android:orderInCategory="3" -->
+<!--         android:showAsAction="never" -->
+<!--         android:title="Smaller Text"/> -->
     
       <item
         android:id="@+id/action_about"

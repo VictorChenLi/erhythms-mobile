@@ -34,6 +34,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Typeface;
 
 public class SystemConsentActivity extends Activity {
 	
@@ -67,6 +68,10 @@ public class SystemConsentActivity extends Activity {
 		appinfo = getSharedPreferences("appinfo", Context.MODE_PRIVATE);
 		pid = appinfo.getString("pid", "--");
 		did = appinfo.getString("did", "--");
+		
+		Typeface droid_font = Typeface.createFromAsset(getApplicationContext().getAssets(),"DroidSans.ttf");
+		formtext.setTypeface(droid_font);
+		
 		
 		//checking first if network is available
 		if(isNetworkConnected(getApplicationContext())){

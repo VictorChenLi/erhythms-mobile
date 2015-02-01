@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generated with http://android-holo-colors.com -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="erhythms_theme" parent="@style/_erhythms_theme"/>
+
+  <style name="_erhythms_theme" parent="android:Theme.Holo.Light">
+
+    <item name="android:editTextBackground">@drawable/erhythms_theme_edit_text_holo_light</item>
+
+    <item name="android:textColorHighlight">#9977c2d7</item>
+    <item name="android:textSelectHandleLeft">@drawable/erhythms_theme_text_select_handle_left</item>
+    <item name="android:textSelectHandleRight">@drawable/erhythms_theme_text_select_handle_right</item>
+    <item name="android:textSelectHandle">@drawable/erhythms_theme_text_select_handle_middle</item>
+
+    <item name="android:autoCompleteTextViewStyle">@style/AutoCompleteTextViewerhythms_theme</item>
+
+    <item name="android:listChoiceIndicatorMultiple">@drawable/erhythms_theme_btn_check_holo_light</item>
+
+    <item name="android:listChoiceIndicatorSingle">@drawable/erhythms_theme_btn_radio_holo_light</item>
+
+    <item name="android:buttonStyle">@style/Buttonerhythms_theme</item>
+
+    <item name="android:imageButtonStyle">@style/ImageButtonerhythms_theme</item>
+
+    <item name="android:dropDownSpinnerStyle">@style/Spinnererhythms_theme</item>
+
+    <item name="android:progressBarStyleHorizontal">@style/ProgressBarerhythms_theme</item>
+
+    <item name="android:buttonStyleToggle">@style/Toggleerhythms_theme</item>
+
+    <item name="android:listChoiceBackgroundIndicator">@drawable/erhythms_theme_list_selector_holo_light</item>
+
+    <item name="android:activatedBackgroundIndicator">@drawable/erhythms_theme_activated_background_holo_light</item>
+
+    <item name="android:fastScrollThumbDrawable">@drawable/erhythms_theme_fastscroll_thumb_holo</item>
+    
+    <item name="android:actionBarStyle">@style/ActionBar_theme</item>
+
+  </style>
+
+</resources>

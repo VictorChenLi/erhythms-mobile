@@ -338,7 +338,7 @@ public class ParticipantConsentActivity extends Activity {
 				editor.commit();
 				
 				Intent intent = new Intent();
-				intent.setClass(getApplicationContext(),MainActivity.class); 
+				intent.setClass(getApplicationContext(),LoadingScreen.class); 
 				startActivity(intent);
 				
 				ParticipantConsentActivity.this.finish();

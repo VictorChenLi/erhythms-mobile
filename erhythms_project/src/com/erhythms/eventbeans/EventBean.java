@@ -66,7 +66,14 @@ public class EventBean implements Serializable{
 	   
 	   private boolean isBranchEnabled = false;
 	   
-	   //initiating Text Display
+	   private boolean responseNeeded = false;
+	   
+	   public boolean isResponseNeeded() {
+		return responseNeeded;
+	}
+
+
+	//initiating Text Display
 	   public EventBean(int index, String textbody)
 	   {
 		    this.index = index;
@@ -99,6 +106,9 @@ public class EventBean implements Serializable{
 		    this.selectCallLog = calllog;
 		    this.enterManually = enterM;
 		    this.enterText = enterText;
+		    
+		    if(numOfAnswers == 0 && !contacts && !calllog && !enterM && !enterText)responseNeeded = true;
+		    	
 		}
 	   
 	   

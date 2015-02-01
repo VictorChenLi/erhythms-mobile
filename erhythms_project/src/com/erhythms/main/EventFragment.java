@@ -23,6 +23,7 @@ import android.app.Fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -126,6 +127,16 @@ public class EventFragment extends Fragment {
 		btnEnterText.setVisibility(View.GONE);
 		response_tv.setVisibility(View.GONE);
 		
+		// setting custom fonts for the UI elements
+		Typeface droid_font = Typeface.createFromAsset(getActivity().getApplicationContext().getAssets(),"DroidSans.ttf");
+		textbody_tv.setTypeface(droid_font);
+		btnContacts.setTypeface(droid_font);
+		btnCallLog.setTypeface(droid_font);
+		btnEnterNumManually.setTypeface(droid_font);
+		btnEnterText.setTypeface(droid_font);
+		response_tv.setTypeface(droid_font);
+				
+		
 		// setting listener for the pick contacts button
 		btnContacts.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -185,7 +196,6 @@ public class EventFragment extends Fragment {
 						// show user input as question answer
 						response_tv.setVisibility(View.VISIBLE);
 						response_tv.setText(selected_number);
-						response_tv.setTextAppearance(getActivity(), R.style.responseText);
 						
 						// notify the activity to enable going next
 						responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
@@ -246,7 +256,6 @@ public class EventFragment extends Fragment {
 								// show user input as question answer
 								String response = userInput.getText().toString();
 								response_tv.setText(response);
-								response_tv.setTextAppearance(getActivity(), R.style.responseText);
 								
 								// notify the activity to enable going next
 								responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
@@ -321,7 +330,6 @@ public class EventFragment extends Fragment {
 								// show user input as question answer
 								String response = userInput.getText().toString();
 								response_tv.setText(response);
-								response_tv.setTextAppearance(getActivity(), R.style.responseText);
 								
 								// notify the activity to enable going next
 								responseCallBack.onEventResponded(eventbean.getIndex(),eventbean.getQid(),"X","0");
@@ -517,7 +525,6 @@ public class EventFragment extends Fragment {
 			//update user interface
 			title_tv.setVisibility(View.GONE);
 			textbody_tv.setText(textbody);
-			textbody_tv.setTextAppearance(getActivity(), R.style.normalText);
 			radioGroup.setVisibility(View.GONE);
 			
 		}
@@ -573,7 +580,6 @@ public class EventFragment extends Fragment {
 			//update user interface
 //			title_tv.setText(eventIndex+".Tie Display");
 			title_tv.setVisibility(View.GONE);
-			textbody_tv.setTextAppearance(getActivity(), R.style.tieText);
 			radioGroup.setVisibility(View.GONE);
 		}
 		
@@ -832,8 +838,6 @@ public class EventFragment extends Fragment {
 			// setting the question body
 			textbody_tv.setText(qbody);
 			
-			textbody_tv.setTextAppearance(getActivity(), R.style.normalText);
-			
 			// identify the question type
 			
 			String questionType = eventbean.getQuestionType();
@@ -870,11 +874,15 @@ public class EventFragment extends Fragment {
 						choiceRadioButton.setTag((char) ('A' + i)); // this is to set characters as tags
 						
 						// setting the layout and style for the radio button
-						LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+						RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
 				                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-				        
+						params.setMargins(0, 0, 0, 30);
+						
+						// styling the new added radio button
 				        choiceRadioButton.setLayoutParams(params);
-						choiceRadioButton.setTextSize(21);
+						choiceRadioButton.setTextSize(27);
+						
+						
 						
 						radioGroup.addView(choiceRadioButton,i);
 						
@@ -982,7 +990,8 @@ public class EventFragment extends Fragment {
 					// setting the layout and style for the radio button
 					LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
 			                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-			        
+					params.setMargins(0, 0, 0, 30);
+					
 			        choiceCheckBox.setLayoutParams(params);
 			        choiceCheckBox.setTextSize(21);
 					

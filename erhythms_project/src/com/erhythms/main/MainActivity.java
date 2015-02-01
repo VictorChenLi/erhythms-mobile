@@ -18,7 +18,9 @@ import com.erhythms.eventbeans.Tie;
 import com.erhythms.eventbeans.TieCriteria;
 import com.erhythms.network.Encoder;
 import com.erhythms.network.UploadDataTask;
+import com.erhythms.widget.TutorialScreen;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -27,6 +29,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.text.SpannableString;
@@ -40,6 +43,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -63,7 +67,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	private String pid = null;
 	private String did = null;
 
-	// Hash map with Integer being event id and map to event bean
+	// Hash map with Integer being event index and map to event bean
 	private HashMap <Integer,EventBean> eventBeanList;
 
 	//Array List used to handle the fragments
@@ -101,7 +105,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	 */
 	private ArrayList <Tie> tiePool = new ArrayList<Tie>();
 	
-	@Override
+	@SuppressLint("NewApi") @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -139,8 +143,8 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 			pid = appinfo.getString("pid", "--");
 			did = appinfo.getString("did", "--");
 			 
-			Intent i = new Intent(MainActivity.this, LoadingScreen.class);
-			startActivityForResult(i, LOADING_SCREEN_RESULT);
+//			Intent i = new Intent(MainActivity.this, LoadingScreen.class);
+//			startActivityForResult(i, LOADING_SCREEN_RESULT);
 			
 			// THESE CODE FORCES THE SHOWING OF THE MENU BUTTON
 		    try {
@@ -159,84 +163,85 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 			eventProgressBar = (ProgressBar)findViewById(R.id.eventProgress);
 			
 			viewGroup = (HorizontalScrollInViewGroup)findViewById(R.id.event_frame);
-					
+			
+			
+			/* This code changes the status bar color
+			 */
+			
+		    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+				    getWindow().setStatusBarColor(Color.parseColor("#77c2d7"));
+			}	 
+		    
+		    
+			// initialize all the events
+			initialize();
+		    
+		    //TUTORIAL SCREEN
+		    //Launch a tutorial screen if launched for the first time
+		    Intent tutorialScreenIntent = new Intent(MainActivity.this, TutorialScreen.class);
+		    startActivity(tutorialScreenIntent);
 		}
 	}		
 			
 			
 		//This method is used by the "Contact Picker" to retrieve user picks from contacts
-		@Override
-		protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		private void initialize(){
 		    
-			super.onActivityResult(requestCode, resultCode, data);
-			
-			if (requestCode == LOADING_SCREEN_RESULT) {
-		        // Make sure the request was successful
-		        if (resultCode == RESULT_OK && data!=null) {
-		        	 
-		        	/* THE FOLLOWING CODE INITIALIZE THE APP
-		        	 */
-		        	
-					 // read the string data from the loading activity
-		        	 String eventString = data.getStringExtra("eventString");
-		        	 
-		        	 parseEventString(eventString);
-		        	 
-		        	 // get total number of events
-		        	 totalEventNum = eventBeanList.size();
-	
-			 	 	 eventFragmentList = new ArrayList<EventFragment>();
-			 		
-		 	 	     for(int i = 1; i <= eventBeanList.size(); i++)
-		 	         {
-		 	         	
-		 	 	    	Log.v("ebstring", eventBeanList.get(i).toString());
-		 	 	    	
-		 	 	    	/* initiate new fragment, passing current tie pool
-		 	 	    	 * the current tie pool will be used in walk-through and UsePreviousTie methods
-		 	 	    	 */
-		 	 	    	
-		 	 	    	Bundle nBundle = new Bundle();
-		 	           	nBundle.putSerializable("tiePool",(Serializable) tiePool);
-		 	           	EventFragment eventFragment = EventFragment.getInstance(nBundle);
-		 	    		eventFragment.setEventbean(eventBeanList.get(i));
-		 	    		
-		 	    		// add to the fragment list
-		 	    		eventFragmentList.add(eventFragment);
-		 	    		
-		 	    		FragmentTransaction ft = getFragmentManager().beginTransaction();
-		 	    		ft.add(R.id.event_frame, eventFragmentList.get(i-1),String.valueOf(i));
-		 	    		ft.commit();
-		 	    		
-		 	         }
-		 	 	     
-		 	 	     // setting the max value for the progress bar
-		 	 	     eventProgressBar.setMax(eventFragmentList.size());
-		 	 	     eventProgressBar.setProgress(1);
-		 	 	     
-		 	 	     
-		 	 	     /* CHECK FOR THE FIRST EVENT TO SEE IF IT REQURIES RESPONSE
-		 	 	      * IF IT DOES NOT, WILL ENABLE THE NEXT BUTTON
-		 	 	      */
-		 	 	     
-		 	 	     if(!eventFragmentList.get(0).getEventbean().isSelectCallLog() && 
-							!eventFragmentList.get(0).getEventbean().isSelectContacts() && 
-							!eventFragmentList.get(0).getEventbean().isEnterManually() && 
-							!eventFragmentList.get(0).getEventbean().isEnterText()
-							&& eventFragmentList.get(0).getEventbean().getChoicecount() == 0){
-							
-							setButtonEnable(btnNext);
-							viewGroup.setAllowNext(true);
-					}else{
+	        	/* THE FOLLOWING CODE INITIALIZE THE APP
+	        	 */
+	        	
+				// read the string data from the loading activity
+				String eventString = getIntent().getExtras().getString("eventString");
+				if (eventString != null) {
+				 
+	        	 parseEventString(eventString);
+	        	 
+	        	 // get total number of events
+	        	 totalEventNum = eventBeanList.size();
+
+		 	 	 eventFragmentList = new ArrayList<EventFragment>();
+		 		
+	 	 	     for(int i = 1; i <= eventBeanList.size(); i++)
+	 	         {
+	 	         	
+	 	 	    	Log.v("ebstring", eventBeanList.get(i).toString());
+	 	 	    	
+	 	 	    	/* initiate new fragment, passing current tie pool
+	 	 	    	 * the current tie pool will be used in walk-through and UsePreviousTie methods
+	 	 	    	 */
+	 	 	    	
+	 	 	    	Bundle nBundle = new Bundle();
+	 	           	nBundle.putSerializable("tiePool",(Serializable) tiePool);
+	 	           	EventFragment eventFragment = EventFragment.getInstance(nBundle);
+	 	    		eventFragment.setEventbean(eventBeanList.get(i));
+	 	    		
+	 	    		// add to the fragment list
+	 	    		eventFragmentList.add(eventFragment);
+	 	    		
+	 	    		FragmentTransaction ft = getFragmentManager().beginTransaction();
+	 	    		ft.add(R.id.event_frame, eventFragmentList.get(i-1),String.valueOf(i));
+	 	    		ft.commit();
+	 	    		
+	 	         }
+	 	 	     
+	 	 	     // setting the max value for the progress bar
+	 	 	     eventProgressBar.setMax(eventFragmentList.size());
+	 	 	     eventProgressBar.setProgress(1);
+	 	 	     
+	 	 	     
+	 	 	     /* CHECK FOR THE FIRST EVENT TO SEE IF IT REQURIES RESPONSE
+	 	 	      * IF IT DOES NOT, WILL ENABLE THE NEXT BUTTON
+	 	 	      */
+	 	 	     
+	 	 	     if(!eventBeanList.get(1).isResponseNeeded()){
 						
-						// else disable the next (because no response need to be checked)
-						viewGroup.setAllowNext(false);}
-			 	 	 
-		        	 
-		             }else{Log.w("debugtag", "Warning: activity result not ok");}
-			} else {
-		        Log.w("debugtag", "Warning: no activity result found");
-		    }
+						viewGroup.setAllowNext(true);
+				}else{
+					
+					// else disable the next (because no response need to be checked)
+					viewGroup.setAllowNext(false);}
+			}
 		}
 
 	private void uploadResponse(){
@@ -713,8 +718,10 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 		//disable button back at start
 		setButtonDisable(btnBack);
 		setButtonDisable(btnNext);
-		viewGroup.setAllowNext(false);
 		
+		//if first event is OK to continue, then enable
+		if(!eventBeanList.get(1).isResponseNeeded())setButtonEnable(btnNext);
+			
 	    return true;
 	}
 	
@@ -785,20 +792,10 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	    	
 	        case R.id.action_help:
 	        	
-	        	AlertDialog alertDialog;
-	            alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-	            alertDialog.setTitle("Help");
-	            alertDialog.setMessage(getResources().getString(R.string.help_dialog));
-	            alertDialog.setButton("Ok", new DialogInterface.OnClickListener() {
-
-	                  public void onClick(DialogInterface dialog, int id) {
-	                	  
-	                } }); 
-	            
-	            alertDialog.show();
-	            
-	            TextView textView_help = (TextView) alertDialog.findViewById(android.R.id.message);
-	            textView_help.setTextSize(15);
+	        	//TUTORIAL SCREEN
+			    //Launch a tutorial screen if launched for the first time
+			    Intent tutorialScreenIntent = new Intent(MainActivity.this, TutorialScreen.class);
+			    startActivity(tutorialScreenIntent);
 		        
 	            return true;
 	            
@@ -883,7 +880,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	    		                  public void onClick(DialogInterface dialog, int id) {
 	    		                	  
 	    		                	  //exit the application
-	    		                	  finish();
+	    		                	  MainActivity.this.finish();
 	    		                	  
 	    		                } }); 
 	    		            
@@ -914,7 +911,7 @@ public class MainActivity extends FragmentActivity implements EventFragment.OnEv
 	    		                  public void onClick(DialogInterface dialog, int id) {
 	    		                	  
 	    		                	  //exit the application
-	    		                	  finish();
+	    		                	  MainActivity.this.finish();
 	    		                	  
 	    		                } }); 
 	    		            

@@ -1,6 +1,7 @@
 package com.erhythms.main;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -17,22 +18,27 @@ import org.json.JSONObject;
 import com.erhythms.network.LogDBHelper;
 import com.erhythmsproject.erhythmsapp.R;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class LoadingScreen extends Activity {
+@SuppressLint("NewApi") public class LoadingScreen extends Activity {
 
 	//database used to query logs
 	private LogDBHelper dbhelper;
@@ -69,6 +75,15 @@ public class LoadingScreen extends Activity {
 		loadingText = (TextView)findViewById(R.id.loadingtext);
 		
 		reconnect_button.setVisibility(View.GONE);
+		
+		/* This code changes the status bar color
+		 */
+		
+	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+		        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+			    getWindow().setStatusBarColor(Color.parseColor("#77c2d7"));
+		}	
+		
 		/*
 		 * Showing splash screen while making network calls to download necessary
 		 * data before launching the app Will use AsyncTask to make http call
@@ -112,7 +127,6 @@ public class LoadingScreen extends Activity {
 			appinfo = getSharedPreferences("appinfo", Context.MODE_PRIVATE);
 			pid = appinfo.getString("pid", "--");
 			did = appinfo.getString("did", "--");
-		
 			
 		}
 
@@ -137,78 +151,112 @@ public class LoadingScreen extends Activity {
 			
 				try {
 				
-				// create the database and insert all call and text logs to it
-				dbhelper = LogDBHelper.getInstance(getApplicationContext());
-				dbhelper.updateAllLogs();
-				
-				loadingBar.setProgress(4);
-				
-				/*
-				 * RETRIEVE ALL EVENT FROM THE WEB PORTAL
-				 * The following code will use a download data task to download all event data from the web portal
-				 * It will then use the first event (expected to be a welcome text set by the researcher) to update UI
-				 * 
+				/* TimeStamp Mechanism for the database update
+				 * Every specific date will have a unique time stamp
+				 * App running on the same day will not generate database again
 				 */
 				
-				String event_url = getResources().getString(R.string.event_url);
+				long DB_TimeStamp = appinfo.getLong("DBtimestamp", 0);
+				Calendar cal = Calendar.getInstance();
+				long currentTimeStamp = Long.parseLong(cal.get(Calendar.YEAR)+""+cal.get(Calendar.MONTH)+""+
+						cal.get(Calendar.DAY_OF_MONTH));
 				
-				ArrayList<NameValuePair> requestparams = new ArrayList<NameValuePair>();
 				
-				// Using a list of nameValuePairs to store POST data
-				requestparams.add(new BasicNameValuePair("participant_id",pid));
-				requestparams.add(new BasicNameValuePair("device_id",did));
-			
+				if (DB_TimeStamp < currentTimeStamp){
+					
+					// create the database and insert all call and text logs to it
+					dbhelper = LogDBHelper.getInstance(getApplicationContext());
+					dbhelper.updateAllLogs();
+					
+					//record the time stamp of the updated database
+					Editor appinfoEdit = appinfo.edit();
+					appinfoEdit.putLong("DBtimestamp", currentTimeStamp);
+					
+					appinfoEdit.commit();
+				}
+					
+					Thread.sleep(200);
 				
-				/* THE FOLLOWING CODE DOWNLOAD DATA FROM THE WEB PORTAL
-				 */
+					loadingBar.setProgress(1);
+					
+					Thread.sleep(200);
+					
+					loadingBar.setProgress(4);
 				
-				// initiating HttpPost object using URL
-				HttpPost request = new HttpPost(event_url);
-						
-				// Binding Request to String Entity
-				request.setEntity(new UrlEncodedFormEntity(requestparams));
+				if(appinfo.getBoolean("activated", false)){
+					
+					/*
+					 * RETRIEVE ALL EVENT FROM THE WEB PORTAL
+					 * The following code will use a download data task to download all event data from the web portal
+					 * It will then use the first event (expected to be a welcome text set by the researcher) to update UI
+					 * 
+					 */
+					
+					String event_url = getResources().getString(R.string.event_url);
+					
+					ArrayList<NameValuePair> requestparams = new ArrayList<NameValuePair>();
+					
+					// Using a list of nameValuePairs to store POST data
+					requestparams.add(new BasicNameValuePair("participant_id",pid));
+					requestparams.add(new BasicNameValuePair("device_id",did));
 				
-				HttpParams httpParameters = new BasicHttpParams();
-				
-				// Set the timeout in milliseconds until a connection is established.
-				// The default value is zero, that means the timeout is not used. 
-				int timeoutConnection = 10000;
-				HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
-
-				// Set the default socket timeout (SO_TIMEOUT) 
-				// in milliseconds which is the timeout for waiting for data.
-				int timeoutSocket = 10000;
-				HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
-						
-				DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
-				
-				Log.v("rqt","rqt="+requestparams.toString());
-				
-				// Sending Request to Server
-				HttpResponse response = httpClient.execute(request);
-				
-				// Get Response stored in a Json file 
-				eventString = EntityUtils.toString(response.getEntity()); 
-				
-				// parsing to get the returned data
-				eventString = eventString.substring(eventString.indexOf("{"),eventString.length());
-				
-				Log.v("result",eventString);
-				
-				//GETTING THE RETURN CODE
-				JSONObject retObj = new JSONObject(eventString);
-				String retCode = retObj.getString("ReturnStatus");
+					
+					/* THE FOLLOWING CODE DOWNLOAD DATA FROM THE WEB PORTAL
+					 */
+					
+					// initiating HttpPost object using URL
+					HttpPost request = new HttpPost(event_url);
+							
+					// Binding Request to String Entity
+					request.setEntity(new UrlEncodedFormEntity(requestparams));
+					
+					HttpParams httpParameters = new BasicHttpParams();
+					
+					// Set the timeout in milliseconds until a connection is established.
+					// The default value is zero, that means the timeout is not used. 
+					int timeoutConnection = 10000;
+					HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+	
+					// Set the default socket timeout (SO_TIMEOUT) 
+					// in milliseconds which is the timeout for waiting for data.
+					int timeoutSocket = 10000;
+					HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+							
+					DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
+					
+					Log.v("rqt","requestingEvents"+requestparams.toString());
+					
+					// Sending Request to Server
+					HttpResponse response = httpClient.execute(request);
+					
+					// Get Response stored in a Json file 
+					eventString = EntityUtils.toString(response.getEntity()); 
+					
+					// parsing to get the returned data
+					eventString = eventString.substring(eventString.indexOf("{"),eventString.length());
+					
+					Log.v("result",eventString);
+					
+					//GETTING THE RETURN CODE
+					JSONObject retObj = new JSONObject(eventString);
+					String retCode = retObj.getString("ReturnStatus");
+					
+					if(!retCode.equals("64891")){return "no";}
+					else{return "ok";}
+		
+			}
 				
 				loadingBar.setProgress(8);
 				
-				Thread.sleep(1200);
+				Thread.sleep(200);
 				
 				loadingBar.setProgress(10);
 				
-				if(!retCode.equals("64891")){return "no";}
-				else{return "ok";}
+			return "ok";
 				
-			}catch (Exception e){
+				
+				
+		}catch (Exception e){
 				
 				// Code used to handle error with network access or parsing string
 				Log.v("exceptionmessage", "exception", e);
@@ -230,10 +278,10 @@ public class LoadingScreen extends Activity {
 				// After completing http call
 				// will close this activity and lauch main activity
 				Intent resultIntent = new Intent(LoadingScreen.this, MainActivity.class);
+				if(eventString!=null)resultIntent.putExtra("eventString", eventString);			
 				
-				resultIntent.putExtra("eventString", eventString);			
-				resultIntent.putExtra("isReady", true);
-				setResult(Activity.RESULT_OK, resultIntent);
+				// starting the main activity
+				startActivity(resultIntent);
 				
 				// close this activity
 				finish();

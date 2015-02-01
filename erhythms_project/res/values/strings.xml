@@ -18,10 +18,10 @@
     <string name="button_disagree">I Disagree</string>
     <string name="button_back">&lt;</string>
     <string name="button_next"></string>
-    <string name="disagree_notice">Sorry, you are not eligible for this survey due to disagreement to the consent form. The app will close now.</string>
-    <string name="activate_notice">Please Enter your Participant ID:\n(You may retrieve from the researcher)</string>
+    <string name="disagree_notice">Sorry, you are not eligible for this research. E-Rhythms will close now.</string>
+    <string name="activate_notice">Please enter your Participant ID to continue. (You may retrieve it from the researchers)</string>
     <string name="build_version">Build 1550</string>
-    <string name="welcome">Welcome to Erhythms!</string>
+    <string name="welcome">Activate your account</string>
     <string name="ok">  OK  </string>
     <string name="interview_title">Welcome to E-Rhythms!</string>
 	<string name="interview_instruction">INSTRUCTIONS\n\nIn the interview, you\'ll be shown a series of text or questions that has been previously decided by your researcher.\n\nYour responses will be made available to the researcher at the end of the survery.\n\nWe DO NOT gather any personal identifiable data.</string>
@@ -36,5 +36,5 @@
 	<string name="finish_message_withdata">Thank you for your participation. \nYou may now press OK to exit.</string>
 	<string name="fatal_error_message">Sorry, we\'ve encountered fatal error. \nPlease contact the administrator for help.</string>
 	<string name="not_eligible_message">Sorry, you are not eligible to participate in this research. \nYou may now press \&quot;OK\&quot; to exit. Thank you for your interest.</string>
-	<string name="branchenabled_hint">Hint: response of this question leads to other branched questions, for this reason, you may not be allowed to change the response once provided.</string>
+	<string name="branchenabled_hint">Note: You can\'t change response for this question because it has branching questions.</string>
 </resources>
